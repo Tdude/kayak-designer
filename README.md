@@ -1,16 +1,29 @@
-# Kayak Design Plugin - Complete Project Documentation
+# Kayak Design Plugin for Wordpress
 
 ## Plugin Overview
 A WordPress plugin that allows users to customize kayak designs with colors, patterns, and accessories, then download their creations as PDF or SVG files.
 
-## Basic usage
-Add this shortcode to any post/page in a full width view:
+### Installation Guide
+
+#### Plugin Installation Steps
+1. Upload plugin files to `/wp-content/plugins/kayak-designer/`
+2. Activate through WordPress admin
+3. Add `[kayak_designer]` shortcode to desired page/post
+4. Configure settings in admin panel
+
+#### Shortcode Usage
+```php
+// Basic usage
 [kayak_designer]
+
+// With custom options
+[kayak_designer width="800" height="600" template="touring" theme="dark"]
+```
 
 ---
 
 
-## Core Documentation Files Needed
+## Core Documentation
 
 ### 1. Technical Requirements Document (TRD.md)
 
@@ -21,8 +34,8 @@ Add this shortcode to any post/page in a full width view:
 - jQuery 3.0+
 
 #### Browser Storage Strategy
-- Use `localStorage` for design saves (max 5-10MB typical limit)
-- Provide export/import functionality for design backup and sharing
+- Uses `localStorage` for design saves (max 5-10MB typical limit)
+- Export/import functionality for design backup and sharing
 - Clear old designs in UI (LRU cache approach)
 
 ### 2. Functional Requirements Document (FRD.md)
@@ -41,25 +54,22 @@ Add this shortcode to any post/page in a full width view:
 
 3. **Real-time Preview**
    - Live design updates as user makes changes
-   - 360-degree rotation preview (in the future)
-   - Zoom in/out functionality or full screen
-   - Design history (undo/redo or similar)
+   - Zoom in/out with full screen option
 
 4. **Export Functionality**
-   - High-resolution PNG download
-   - Vector SVG export (maybe)
+   - PNG download
    - PDF generation with design specs
    - Social media sharing formats for Instagram, Facebook etc. with back link to Kayak Designer.
 
 5. **Design Management**
-   - Save current design to localStorage in own browser with names
+   - Save current design to localStorage in own browser with name of design
    - Option to save several designs (local storage?)
    - Load previously saved designs
    - If needed, a robust Design Gallery/library (needs to be saved in Database as a logged in user/subscriber in WP)
    - Import/export design files in structured data format, like json
   
 
-### 3. User Interface Specification (UI-Spec.md)
+### 3. User Interface
 
 #### Layout Structure
 ```
@@ -77,7 +87,7 @@ Add this shortcode to any post/page in a full width view:
 │                 │                                   │
 ├─────────────────┴───────────────────────────────────┤
 │              Export Options Panel                   │
-│    [PNG] [SVG] [PDF] [Share] [Print Preview]       │
+│    [PNG] [PDF] [Share] [Print Preview]       │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -142,19 +152,4 @@ window.KayakDesigner = {
 ];
 ```
 
-### 6. Installation Guide
 
-#### Plugin Installation Steps
-1. Upload plugin files to `/wp-content/plugins/kayak-designer/`
-2. Activate through WordPress admin
-3. Add `[kayak_designer]` shortcode to desired page/post
-4. Configure settings in admin panel
-
-#### Shortcode Usage
-```php
-// Basic usage
-[kayak_designer]
-
-// With custom options
-[kayak_designer width="800" height="600" template="touring" theme="dark"]
-```
