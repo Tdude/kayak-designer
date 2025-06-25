@@ -175,11 +175,29 @@
 /* --------------------------------------------------------------------
    5. Controls Section (Right Panel)
 -------------------------------------------------------------------- */
-#kayak-color-controls h2, #kayak-color-controls h3, #kayak-color-controls h4 {
+#kayak-color-controls h2, #kayak-color-controls h3 {
     margin-top: 20px;
     margin-bottom: 10px;
+    border-bottom: 1px solid #ddd;
     padding-bottom: 5px;
-    border-bottom: 1px solid #eee;
+}
+
+.control-group-horizontal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.control-group-horizontal > div {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 130px; /* Ensures items wrap nicely */
+}
+
+.control-group-horizontal label {
+    margin-bottom: 5px;
 }
 
 #kayak-color-controls h2:first-of-type, #kayak-color-controls h3:first-of-type {

@@ -3,7 +3,7 @@
  * Plugin Name:       Kayak Designer
  * Plugin URI:        https://example.com/plugins/the-basics/
  * Description:       Allows users to customize kayak designs with colors, patterns, and accessories, then download their creations as PDF or SVG files.
- * Version:           1.0.0
+ * Version:           1.1.1
  * Requires at least: 5.2
  * Requires PHP:      7.2
  * Author:            Tibor Berki
@@ -247,43 +247,47 @@ function kayak_designer_shortcode_handler($atts) {
 
             <!-- HULL OPTIONS -->
             <h3>Hull</h3>
-            <div>
-                <label>Hull finish:</label>
-                <select id="hull-finish" name="hull-finish">
-                    <option value="standard">Standard</option>
-                    <option value="carbon">Carbon</option> 
-                </select>
-            </div>
-            <div>
-                <label for="hull-color">Hull base color:</label>
-                <?php kayak_designer_render_ral_palette('hull-color', 'hull-color', '#E0E0E0'); ?>
+            <div class="control-group-horizontal">
+                <div>
+                    <label>Hull finish:</label>
+                    <select id="hull-finish" name="hull-finish">
+                        <option value="standard">Standard</option>
+                        <option value="carbon">Carbon</option> 
+                    </select>
+                </div>
+                <div>
+                    <label for="hull-color">Hull base color:</label>
+                    <?php kayak_designer_render_ral_palette('hull-color', 'hull-color', '#E0E0E0'); ?>
+                </div>
             </div>
 
             <!-- ACCESSORIES -->
             <h3>Accessories</h3>
-            <div>
-                <label for="deck-seam-tape-color">Deck seam tape:</label>
-                <?php kayak_designer_render_ral_palette('deck-seam-tape-color', 'deck-seam-tape-color', '#0A0A0A'); ?>
-            </div>
-            <div>
-                <label for="lines-color">Lines:</label>
-                <?php kayak_designer_render_ral_palette('lines-color', 'lines-color', '#000000'); ?>
-             </div>
-            <div>
-                <label for="accent-front-color">Front accent:</label>
-                <?php kayak_designer_render_ral_palette('accent-front-color', 'accent-front-color', '#C0C0C0'); ?>
-            </div>
-            <div>
-                <label for="accent-rear-color">Rear accent:</label>
-                <?php kayak_designer_render_ral_palette('accent-rear-color', 'accent-rear-color', '#C0C0C0'); ?>
-            </div>
-            <div>
-                <label for="cockpit-rim-color">Cockpit Rim:</label>
-                <?php kayak_designer_render_ral_palette('cockpit-rim-color', 'cockpit-rim-color', '#333333'); ?>
-            </div>
-            <div>
-                <label for="seat-color">Seat:</label>
-                <?php kayak_designer_render_ral_palette('seat-color', 'seat-color', '#555555'); ?>
+            <div class="control-group-horizontal">
+                <div>
+                    <label for="deck-seam-tape-color">Seam tape:</label>
+                    <?php kayak_designer_render_ral_palette('deck-seam-tape-color', 'deck-seam-tape-color', '#0A0A0A'); ?>
+                </div>
+                <div>
+                    <label for="lines-color">Lines:</label>
+                    <?php kayak_designer_render_ral_palette('lines-color', 'lines-color', '#000000'); ?>
+                </div>
+                <div>
+                    <label for="accent-front-color">Front accent:</label>
+                    <?php kayak_designer_render_ral_palette('accent-front-color', 'accent-front-color', '#C0C0C0'); ?>
+                </div>
+                <div>
+                    <label for="accent-rear-color">Rear accent:</label>
+                    <?php kayak_designer_render_ral_palette('accent-rear-color', 'accent-rear-color', '#C0C0C0'); ?>
+                </div>
+                <div>
+                    <label for="cockpit-rim-color">Cockpit rim:</label>
+                    <?php kayak_designer_render_ral_palette('cockpit-rim-color', 'cockpit-rim-color', '#333333'); ?>
+                </div>
+                <div>
+                    <label for="seat-color">Seat color:</label>
+                    <?php kayak_designer_render_ral_palette('seat-color', 'seat-color', '#555555'); ?>
+                </div>
             </div>
 
             <!-- LOGOS -->
