@@ -179,7 +179,7 @@ kayak-designer-plugin/
    - Template switching with design preservation
 
 2. **Design Customization**
-   - Color picker for hull, deck, deck seam tape, lines and accent colors
+   - Color picker for hull, deck, deck seam tape, lines and accent colors. Accent colors can also be images (Texture options). There are front accent colors and back accent colors.
    - Pattern overlays (logo, geometric on deck)
    - Texture options (wood, carbon, carbon-kevlar, all need a high resolution image)
    - Accessory design (line color, logo color, rim/seat color and hull seam color) Paddle holders, hatches, etc. are stationary per-model.
