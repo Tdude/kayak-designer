@@ -1,4 +1,10 @@
-/* Kayak Designer General Layout */
+/* ====================================================================
+   KAYAK DESIGNER - MAIN STYLESHEET
+==================================================================== */
+
+/* --------------------------------------------------------------------
+   1. General Layout & Structure
+-------------------------------------------------------------------- */
 #kayak-designer-container {
     display: flex;
     flex-wrap: wrap;
@@ -6,55 +12,81 @@
 }
 
 #kayak-preview-area {
-    flex: 2;
+    flex: 1 1 60%;
     min-width: 400px;
 }
 
 #kayak-color-controls {
-    flex: 1;
+    flex: 1 1 35%;
     min-width: 300px;
 }
 
-/* Kayak 2D View Styles */
+/* --------------------------------------------------------------------
+   2. Kayak 2D View & Color Layers
+-------------------------------------------------------------------- */
 #kayak-top-view-container,
 #kayak-side-view-container {
-    position: relative; /* This is crucial for absolute positioning of layers */
+    position: relative;
     margin-bottom: 20px;
+    border: 1px solid #ddd;
+    background: #ffffff;
+    max-width: 100%;
+    overflow: hidden;
 }
 
-#kayak-top-view-container img,
-#kayak-side-view-container img {
+#kayak-top-view-container > img,
+#kayak-side-view-container > img {
     max-width: 100%;
     height: auto;
-    display: block; /* Removes bottom space under the image */
+    display: block;
 }
 
-/* Color Layer Styles */
 .color-layer {
+    z-index: 10; /* Default z-index */
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: transparent; /* Default color, will be updated by JS */
+    background-color: transparent;
     -webkit-mask-size: contain;
     mask-size: contain;
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
     -webkit-mask-position: center;
     mask-position: center;
-    pointer-events: none; /* Allows clicks to go through to elements behind */
+    pointer-events: none;
 }
 
-/* --- MASK DEFINITIONS --- */
-/* These URLs are relative to the CSS file's location */
+.hardware-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    z-index: 100;
+    pointer-events: none;
+}
+
+/* --------------------------------------------------------------------
+   3. CSS Mask Definitions
+-------------------------------------------------------------------- */
+/* Z-Index Stacking Order */
+#kayak-top-view-deck-color, #kayak-side-view-deck-color, #kayak-side-view-hull-color { z-index: 10; }
+
+#kayak-top-view-deck-seam-tape-color, #kayak-side-view-deck-seam-tape-color { z-index: 30; }
+#kayak-top-view-accent-front-color, #kayak-top-view-accent-rear-color { z-index: 40; }
+#kayak-top-view-seat-color { z-index: 45; }
+#kayak-top-view-cockpit-rim-color, #kayak-side-view-cockpit-rim-color { z-index: 48; }
+#kayak-top-view-logo-color, #kayak-side-view-logo-color { z-index: 50; }
+#kayak-top-view-lines-color, #kayak-side-view-lines-color { z-index: 60; }
 
 /* Hull Masks */
-#kayak-top-view-hull-color   { -webkit-mask-image: url('../images/masks/hull_top_mask.png'); mask-image: url('../images/masks/hull_top_mask.png'); }
 #kayak-side-view-hull-color  { -webkit-mask-image: url('../images/masks/hull_side_mask.png'); mask-image: url('../images/masks/hull_side_mask.png'); }
 
 /* Deck Masks */
-#kayak-top-view-deck-color   { -webkit-mask-image: url('../images/masks/deck_side_mask.png'); mask-image: url('../images/masks/deck_side_mask.png'); } /* Was deck_top_mask.png, now using the correct main deck mask */
+#kayak-top-view-deck-color   { -webkit-mask-image: url('../images/masks/deck_top_mask.png'); mask-image: url('../images/masks/deck_top_mask.png'); }
 #kayak-side-view-deck-color  { -webkit-mask-image: url('../images/masks/deck_side_mask.png'); mask-image: url('../images/masks/deck_side_mask.png'); }
 
 /* Deck Seam Tape Masks */
@@ -65,53 +97,92 @@
 #kayak-top-view-lines-color  { -webkit-mask-image: url('../images/masks/lines_top_mask.png'); mask-image: url('../images/masks/lines_top_mask.png'); }
 #kayak-side-view-lines-color { -webkit-mask-image: url('../images/masks/lines_side_mask.png'); mask-image: url('../images/masks/lines_side_mask.png'); }
 
-/* Accent 1 Masks */
-#kayak-top-view-accent-color-1  { -webkit-mask-image: url('../images/masks/deck_top_mask.png'); mask-image: url('../images/masks/deck_top_mask.png'); } /* Was accent_1_top_mask.png, now using the correct accent mask */
-#kayak-side-view-accent-color-1 { -webkit-mask-image: url('../images/masks/accent_1_side_mask.png'); mask-image: url('../images/masks/accent_1_side_mask.png'); }
+/* Front Accent Masks */
+#kayak-top-view-accent-front-color  { -webkit-mask-image: url('../images/masks/accent_front_top_mask.png'); mask-image: url('../images/masks/accent_front_top_mask.png'); }
 
-/* Accent 2 Masks */
-#kayak-top-view-accent-color-2  { -webkit-mask-image: url('../images/masks/accent_2_top_mask.png'); mask-image: url('../images/masks/accent_2_top_mask.png'); }
-#kayak-side-view-accent-color-2 { -webkit-mask-image: url('../images/masks/accent_2_side_mask.png'); mask-image: url('../images/masks/accent_2_side_mask.png'); }
+/* Rear Accent Masks */
+#kayak-top-view-accent-rear-color  { -webkit-mask-image: url('../images/masks/accent_rear_top_mask.png'); mask-image: url('../images/masks/accent_rear_top_mask.png'); }
+
+/* Cockpit & Seat Masks */
+#kayak-top-view-cockpit-rim-color   { -webkit-mask-image: url('../images/masks/cockpit_rim_top_mask.png'); mask-image: url('../images/masks/cockpit_rim_top_mask.png'); }
+#kayak-side-view-cockpit-rim-color  { -webkit-mask-image: url('../images/masks/cockpit_rim_side_mask.png'); mask-image: url('../images/masks/cockpit_rim_side_mask.png'); }
+#kayak-top-view-seat-color   { -webkit-mask-image: url('../images/masks/seat_top_mask.png'); mask-image: url('../images/masks/seat_top_mask.png'); }
 
 
-/* RAL Color Palette Styles */
+/* Logo Masks */
+#kayak-top-view-logo-color   { -webkit-mask-image: url('../images/masks/logos_top_mask.png'); mask-image: url('../images/masks/logos_top_mask.png'); }
+#kayak-side-view-logo-color  { -webkit-mask-image: url('../images/masks/logos_side_mask.png'); mask-image: url('../images/masks/logos_side_mask.png'); }
+
+/* --------------------------------------------------------------------
+   4. Interactive RAL Color Palette
+-------------------------------------------------------------------- */
 .ral-palette-container {
-    display: flex;
-    flex-wrap: wrap;
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    
+}
+
+.selected-color-preview {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-block;
+    vertical-align: middle;
+    background-clip: padding-box;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1) inset;
+}
+
+.ral-palette-grid-wrapper {
+    position: absolute;
+    z-index: 100;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    padding: 10px;
+    display: none; /* Hidden by default, toggled by JS */
+    max-height: 220px;
+    overflow-y: auto;
+    margin-top: 2px;
+}
+
+.ral-palette-grid-wrapper:not(.is-hidden) {
+    display: block;
+}
+
+.ral-palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(24px, 1fr));
     gap: 5px;
-    margin-top: 5px;
-    margin-bottom: 15px;
-    max-width: 350px;
+    max-width: 300px;
 }
 
 .ral-swatch {
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    border: 1px solid #eee;
     cursor: pointer;
-    border: 2px solid #ddd;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+    transition: transform 0.1s ease-in-out;
 }
 
 .ral-swatch:hover {
     transform: scale(1.15);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border-color: #000;
 }
 
-.ral-swatch.selected {
-    border-color: #007cba; /* WordPress Admin Blue */
-    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #007cba;
-    transform: scale(1.1);
-}
-
-/* Controls Section Styling */
-#kayak-color-controls h3, #kayak-color-controls h4 {
+/* --------------------------------------------------------------------
+   5. Controls Section (Right Panel)
+-------------------------------------------------------------------- */
+#kayak-color-controls h2, #kayak-color-controls h3, #kayak-color-controls h4 {
     margin-top: 20px;
     margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
 }
 
-#kayak-color-controls h3:first-child {
+#kayak-color-controls h2:first-of-type, #kayak-color-controls h3:first-of-type {
     margin-top: 0;
 }
 
@@ -125,85 +196,25 @@
     font-weight: bold;
 }
 
-
-#kayak-designer-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-#kayak-preview-area {
-    flex: 1 1 60%; /* Allow preview area to take more space */
-    min-width: 300px;
-}
-
-#kayak-color-controls {
-    flex: 1 1 35%; /* Allow controls to take space */
-    min-width: 250px;
-}
-
-#kayak-top-view-container,
-#kayak-side-view-container {
-    position: relative; /* Crucial for absolute positioning of overlays */
-    margin-bottom: 20px; /* Space between top and side views */
-    border: 1px solid #ddd; /* Optional: to visualize the container bounds */
-    background: #ffffff;
-    max-width: 100%; /* Ensure it doesn't overflow its parent */
-    overflow: hidden; /* Prevent overlays from spilling out if they are too large */
-}
-
-#kayak-top-view-img,
-#kayak-side-view-img {
-    display: block;  /* Remove extra space below inline images */
-    max-width: 100%; /* Responsive: scale with container */
-    height: auto;    /* Maintain aspect ratio */
-    position: relative; /* Ensure base image is part of the stacking context */
-    z-index: 0; /* Base layer */
-}
-
-/* Styles for overlay images are handled by inline styles in JS for now,
-   but could be moved here if they become more complex. e.g.:
-
-#kayak-top-view-container img[id*="-overlay"],
-#kayak-side-view-container img[id*="-overlay"] {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%; 
-    object-fit: contain; // Or 'cover', depending on desired effect
-    pointer-events: none;
-}
-
-img[id*="-pattern-overlay"] {
-    z-index: 1;
-}
-
-img[id*="-logo-overlay"] {
-    z-index: 2;
-}
-*/
-
-/* Basic styling for control groups */
-#kayak-color-controls h3,
-#kayak-color-controls h4 {
-    margin-top: 0;
-    margin-bottom: 10px;
-}
-
-#kayak-color-controls > div > div {
-    margin-bottom: 15px; /* Space between control groups like Hull options, Deck options */
-}
-
-#kayak-color-controls label {
+#kayak-color-controls input[type="radio"] + label {
     display: inline-block;
-    margin-right: 10px;
-    margin-bottom: 5px;
+    font-weight: normal;
+    margin-right: 15px;
 }
 
-/* --- Modal Styles --- */
+#kayak-color-controls select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------
+   6. Full-Screen Modal & Zoom Controls
+-------------------------------------------------------------------- */
 #kayak-designer-modal {
-    display: none; /* Hidden by default */
+    display: none; /* Toggled by JS */
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -224,6 +235,22 @@ img[id*="-logo-overlay"] {
     opacity: 1;
 }
 
+#modal-content-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 90%;
+    height: 90%;
+}
+
+#modal-content-wrapper .kayak-view-container {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+}
+
 .modal-close {
     position: absolute;
     top: 20px;
@@ -241,17 +268,18 @@ img[id*="-logo-overlay"] {
     text-decoration: none;
 }
 
+#modal-content-wrapper .kayak-view-container {
+    width: 90vw;
+    max-width: 1200px; /* Add a max-width for very large screens */
+    margin: auto;
+}
+
 #modal-content-wrapper {
     position: relative;
     margin: auto;
     padding: 20px;
     width: 90%;
     max-width: 1200px;
-}
-
-#modal-content-wrapper .kayak-view-container {
-    width: 100%;
-    height: auto;
 }
 
 .view-controls {
@@ -275,48 +303,4 @@ img[id*="-logo-overlay"] {
 
 .zoom-icon:hover {
     background-color: rgba(0, 0, 0, 0.7);
-}
-
-#kayak-color-controls select,
-#kayak-color-controls input[type="text"],
-#kayak-color-controls input[type="button"] {
-    padding: 8px;
-    margin-bottom: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-#kayak-color-controls input[type="radio"] + label {
-    margin-right: 15px;
-}
-
-/* RAL Color Palette Styles */
-.ral-palette-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 5px;
-    margin-bottom: 10px; /* Space below palette */
-}
-
-.ral-swatch {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%; /* Make swatches circular */
-    cursor: pointer;
-    border: 2px solid #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
-}
-
-.ral-swatch:hover {
-    transform: scale(1.1);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-}
-
-.ral-swatch.selected {
-    border-color: #0073aa; /* WordPress admin blue for selection */
-    box-shadow: 0 0 0 2px #0073aa; /* A stronger indicator for the selected swatch */
-    transform: scale(1.1);
 }
