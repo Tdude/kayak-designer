@@ -199,10 +199,9 @@ function kayak_designer_shortcode_handler($atts) {
     <div id="kayak-designer-container">
         <div id="kayak-preview-area">
             <div id="kayak-top-view-container">
-                <img id="kayak-top-view-img" src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'assets/images/placeholder_top.png'); ?>" alt="Kayak Top View">
+                                <img id="kayak-top-view-img" class="kayak-outline-image" src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'assets/images/placeholder_top.png'); ?>" alt="Kayak Top View">
                 <!-- Color layers will be placed here -->
                 <div id="kayak-top-view-deck-color" class="color-layer"></div>
-                <div id="kayak-top-view-deck-seam-tape-color" class="color-layer"></div>
                 <div id="kayak-top-view-lines-color" class="color-layer"></div>
                 <div id="kayak-top-view-accent-front-color" class="color-layer"></div>
                 <div id="kayak-top-view-accent-rear-color" class="color-layer"></div>
@@ -214,7 +213,7 @@ function kayak_designer_shortcode_handler($atts) {
                 <div class="view-controls"><span class="zoom-icon" data-view="top">&#x26F6;</span></div>
             </div>
             <div id="kayak-side-view-container">
-                <img id="kayak-side-view-img" src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'assets/images/placeholder_side.png'); ?>" alt="Kayak Side View">
+                                <img id="kayak-side-view-img" class="kayak-outline-image" src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'assets/images/placeholder_side.png'); ?>" alt="Kayak Side View">
                 <!-- Color layers will be placed here -->
                 <div id="kayak-side-view-hull-color" class="color-layer"></div>
                 <div id="kayak-side-view-deck-color" class="color-layer"></div>
@@ -252,7 +251,8 @@ function kayak_designer_shortcode_handler($atts) {
                     <label>Hull finish:</label>
                     <select id="hull-finish" name="hull-finish">
                         <option value="standard">Standard</option>
-                        <option value="carbon">Carbon</option> 
+                        <option value="carbon">Carbon</option>
+                        <option value="carbon_kevlar">Carbon Kevlar</option> 
                     </select>
                 </div>
                 <div>
@@ -310,13 +310,13 @@ function kayak_designer_shortcode_handler($atts) {
             <div id="design-management-controls">
                 <div>
                     <label for="design-name">Design Name:</label>
-                    <input type="text" id="design-name" name="design-name" placeholder="My Awesome Kayak">
+                    <input type="text" id="design-name" name="design-name" placeholder="My Awesome Qajaq">
                     <button id="save-design-button" class="button">Save Design</button>
                 </div>
                 <div style="margin-top: 10px;">
                     <label for="saved-designs-select">Load Design:</label>
                     <select id="saved-designs-select" name="saved-designs-select">
-                        <option value="">-- Select a Design --</option>
+                        <option value="">Select a Design from your browser</option>
                     </select>
                 </div>
             </div>
@@ -378,7 +378,9 @@ function kayak_designer_enqueue_assets() {
                 'apiKey'        => isset($options['api_key']) ? esc_attr($options['api_key']) : '',
                 'pluginBaseUrl' => plugin_dir_url(__FILE__),
                 'ajaxUrl'       => admin_url('admin-ajax.php'),
+                'patternsPath'  => plugin_dir_url(__FILE__) . 'assets/patterns/',
                 'nonce'         => wp_create_nonce('kayak_designer_nonce'),
+                'isUserLoggedIn' => is_user_logged_in(),
             ]
         );
     }
