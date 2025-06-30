@@ -75,7 +75,7 @@
 /* Z-Index Stacking Order */
 #kayak-top-view-deck-color, #kayak-side-view-deck-color, #kayak-side-view-hull-color { z-index: 10; }
 
-#kayak-top-view-deck-seam-tape-color, #kayak-side-view-deck-seam-tape-color { z-index: 30; }
+#kayak-side-view-deck-seam-tape-color { z-index: 30; }
 #kayak-top-view-accent-front-color, #kayak-top-view-accent-rear-color { z-index: 40; }
 #kayak-top-view-seat-color { z-index: 45; }
 #kayak-top-view-cockpit-rim-color, #kayak-side-view-cockpit-rim-color { z-index: 48; }
@@ -90,7 +90,7 @@
 #kayak-side-view-deck-color  { -webkit-mask-image: url('../images/masks/deck_side_mask.png'); mask-image: url('../images/masks/deck_side_mask.png'); }
 
 /* Deck Seam Tape Masks */
-#kayak-top-view-deck-seam-tape-color  { -webkit-mask-image: url('../images/masks/seam_tape_top_mask.png'); mask-image: url('../images/masks/seam_tape_top_mask.png'); }
+
 #kayak-side-view-deck-seam-tape-color { -webkit-mask-image: url('../images/masks/seam_tape_side_mask.png'); mask-image: url('../images/masks/seam_tape_side_mask.png'); }
 
 /* Lines Masks */
