@@ -25,27 +25,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleHullAppearanceChange = () => {
         const finishSelect = document.getElementById('hull-finish');
-        const hullColorInput = document.getElementById('hull-color'); // This is the hidden input
-        const hullSideView = document.getElementById('kayak-side-view-hull-color');
-        const hullColorPickerContainer = hullColorInput?.closest('.control-group-horizontal > div');
 
-        if (!finishSelect || !hullSideView || !hullColorPickerContainer) return;
+        // Get elements for HULL ONLY
+        const hullColorInput = document.getElementById('hull-color');
+        const hullSideView = document.getElementById('kayak-side-view-hull-color');
+        const hullTopView = document.getElementById('kayak-top-view-hull-color');
+
+        // Get the UI containers for the HULL to hide/show them
+        const hullColorLabel = document.querySelector('label[for="hull-color"]');
+        const hullColorPicker = hullColorInput?.closest('.ral-palette-container');
+
+        // We only require the side view and the picker to proceed. The top view is optional.
+        if (!finishSelect || !hullSideView || !hullColorPicker || !hullColorLabel) {
+            console.error("Hull appearance change handler couldn't find essential hull elements (side view or picker).");
+            return;
+        }
 
         const selectedFinish = finishSelect.value;
 
-        // Check if the selected finish is a pattern (e.g., 'carbon', 'carbon_kevlar')
-        // Assumes non-pattern options have a value like 'solid' or similar.
-        if (selectedFinish.includes('carbon')) { // A simple check to identify pattern options
+        if (selectedFinish.includes('carbon')) {
             const patternUrl = `${patternsPath}${selectedFinish}.png`;
-            hullSideView.style.backgroundColor = ''; // Clear solid color
-            hullSideView.style.backgroundImage = `url(${patternUrl})`;
-            hullSideView.classList.add('pattern-active');
-            hullColorPickerContainer.style.display = 'none'; // Hide the solid color picker
-        } else { // Handle solid color
-            hullSideView.style.backgroundImage = 'none'; // Remove pattern
-            hullSideView.classList.remove('pattern-active');
+            
+            // Apply pattern to both hull views (top and side), if they exist
+            [hullSideView, hullTopView].forEach(el => {
+                if (el) {
+                    el.style.backgroundColor = '';
+                    el.style.backgroundImage = `url(${patternUrl})`;
+                    el.classList.add('pattern-active');
+                }
+            });
+
+            // Hide ONLY the hull color picker and its label
+            hullColorLabel.style.display = 'none';
+            hullColorPicker.style.display = 'none';
+
+        } else { // Handle standard/solid color for hull
+            // Remove pattern from both hull views
+            [hullSideView, hullTopView].forEach(el => {
+                if (el) {
+                    el.style.backgroundImage = 'none';
+                    el.classList.remove('pattern-active');
+                }
+            });
+
+            // Restore solid color for hull (this function updates both views if they exist)
             if (hullColorInput) updateKayakPartColor('hull-color', hullColorInput.value);
-            hullColorPickerContainer.style.display = ''; // Show the solid color picker
+
+            // Show ONLY the hull color picker and its label
+            hullColorLabel.style.display = '';
+            hullColorPicker.style.display = '';
         }
     };
 
@@ -195,13 +223,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 input.value = value;
             } else if (input.classList.contains('color-input')) {
                 input.value = value;
-                const container = input.closest('.ral-palette-container');
-                const preview = container?.querySelector('.selected-color-preview');
-                if (preview) preview.style.backgroundColor = value;
+
+                // Directly update the visual color of the kayak part
                 updateKayakPartColor(key, value);
+
+                // Update the UI of the color picker control
+                const container = input.closest('.ral-palette-container');
+                if (container) {
+                    const preview = container.querySelector('.selected-color-preview');
+                    const colorNameSpan = container.querySelector('.selected-color-name');
+                    
+                    if (preview) preview.style.backgroundColor = value;
+
+                    // Find the corresponding swatch to get the color name, case-insensitively
+                    let swatchName = 'Custom'; // Fallback
+                    const allSwatches = container.querySelectorAll('.ral-swatch');
+                    for (const swatch of allSwatches) {
+                        if (swatch.dataset.color.toLowerCase() === value.toLowerCase()) {
+                            swatchName = swatch.dataset.colorName;
+                            break;
+                        }
+                    }
+                    if (colorNameSpan) colorNameSpan.textContent = swatchName;
+                }
             }
         });
-        handleHullAppearanceChange(); // Refresh hull view after applying data
+
+        // After applying all data, refresh the hull's appearance (pattern vs. color)
+        handleHullAppearanceChange();
     };
 
     const saveDesign = async () => {
@@ -338,8 +387,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const swatch = e.target.closest('.ral-swatch');
                 if (!swatch) return;
                 const newColor = swatch.dataset.color;
+                const newColorName = swatch.dataset.colorName;
+                const colorNameSpan = container.querySelector('.selected-color-name');
+
                 if (colorInput) colorInput.value = newColor;
                 if (preview) preview.style.backgroundColor = newColor;
+                if (colorNameSpan) colorNameSpan.textContent = newColorName;
+
                 container.dispatchEvent(new CustomEvent('colorSelected', { detail: { color: newColor } }));
                 gridWrapper.classList.add('is-hidden');
             });

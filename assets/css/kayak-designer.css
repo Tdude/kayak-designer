@@ -12,12 +12,12 @@
 }
 
 #kayak-preview-area {
-    flex: 1 1 60%;
+    flex: 1 1 100%;
     min-width: 400px;
 }
 
 #kayak-color-controls {
-    flex: 1 1 35%;
+    flex: 1 1 100%;
     min-width: 300px;
 }
 
@@ -73,10 +73,12 @@
    3. CSS Mask Definitions
 -------------------------------------------------------------------- */
 /* Z-Index Stacking Order */
-#kayak-top-view-deck-color, #kayak-side-view-deck-color, #kayak-side-view-hull-color { z-index: 10; }
+/* Base Layers */
+#kayak-top-view-deck-color, #kayak-side-view-deck-color { z-index: 10; }
+#kayak-top-view-hull-color, #kayak-side-view-hull-color { z-index: 11; }
 
 #kayak-side-view-deck-seam-tape-color { z-index: 30; }
-#kayak-top-view-accent-front-color, #kayak-top-view-accent-rear-color { z-index: 40; }
+#kayak-top-view-accent-front-color, #kayak-top-view-accent-rear-color, #kayak-side-view-accent-front-color, #kayak-side-view-accent-rear-color { z-index: 20; }
 #kayak-top-view-seat-color { z-index: 45; }
 #kayak-top-view-cockpit-rim-color, #kayak-side-view-cockpit-rim-color { z-index: 48; }
 #kayak-top-view-logo-color, #kayak-side-view-logo-color { z-index: 50; }
@@ -103,8 +105,23 @@
 /* Rear Accent Masks */
 #kayak-top-view-accent-rear-color  { -webkit-mask-image: url('../images/masks/accent_rear_top_mask.png'); mask-image: url('../images/masks/accent_rear_top_mask.png'); }
 
+/* Side Accent Masks */
+#kayak-side-view-accent-front-color {
+    -webkit-mask-image: url('../images/masks/accent_front_side_mask.png');
+    mask-image: url('../images/masks/accent_front_side_mask.png');
+}
+
+#kayak-side-view-accent-rear-color {
+    -webkit-mask-image: url('../images/masks/accent_rear_side_mask.png');
+    mask-image: url('../images/masks/accent_rear_side_mask.png');
+}
+
 /* Cockpit & Seat Masks */
-#kayak-top-view-cockpit-rim-color   { -webkit-mask-image: url('../images/masks/cockpit_rim_top_mask.png'); mask-image: url('../images/masks/cockpit_rim_top_mask.png'); }
+#kayak-top-view-cockpit-rim-color {
+    -webkit-mask-image: url('../images/masks/cockpit_rim_top_mask.png');
+    mask-image: url('../images/masks/cockpit_rim_top_mask.png');
+}
+
 #kayak-side-view-cockpit-rim-color  { -webkit-mask-image: url('../images/masks/cockpit_rim_side_mask.png'); mask-image: url('../images/masks/cockpit_rim_side_mask.png'); }
 #kayak-top-view-seat-color   { -webkit-mask-image: url('../images/masks/seat_top_mask.png'); mask-image: url('../images/masks/seat_top_mask.png'); }
 
@@ -123,12 +140,18 @@
     
 }
 
+.selected-color-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between circle and text */
+    cursor: pointer;
+}
+
 .selected-color-preview {
     width: 30px;
     height: 30px;
     border: 1px solid #ccc;
     border-radius: 50%;
-    cursor: pointer;
     display: inline-block;
     vertical-align: middle;
     background-clip: padding-box;
@@ -175,10 +198,43 @@
 /* --------------------------------------------------------------------
    5. Controls Section (Right Panel)
 -------------------------------------------------------------------- */
-#kayak-color-controls h2, #kayak-color-controls h3 {
+
+.controls-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: 1fr; /* Default to 1 column for mobile */
+}
+
+.control-section {
+    background-color: rgba(253, 253, 253, 0.2);
+    padding: 1em;
+    border: 1px solid rgba(100, 100, 100, 0.2);
+    border-radius: 4px;
+}
+
+.control-section h4 {
+    margin-top: 1em;
+    padding-bottom: 1em;
+    border-bottom: 1px solid rgba(100, 100, 100, 0.2);
+    margin-bottom: 1em;
+}
+
+/* Responsive grid columns */
+@media (min-width: 768px) {
+    .controls-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .controls-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+#kayak-color-controls h3, #kayak-color-controls h4 {
     margin-top: 20px;
     margin-bottom: 10px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid rgba(100, 100, 100, 0.2);
     padding-bottom: 5px;
 }
 
@@ -200,12 +256,20 @@
     margin-bottom: 5px;
 }
 
-#kayak-color-controls h2:first-of-type, #kayak-color-controls h3:first-of-type {
-    margin-top: 0;
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
-#kayak-color-controls div {
-    margin-bottom: 15px;
+.grid-2-col {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+#kayak-color-controls h2:first-of-type, #kayak-color-controls h3:first-of-type {
+    margin-top: 0;
 }
 
 #kayak-color-controls label {
@@ -288,7 +352,7 @@
 
 #modal-content-wrapper .kayak-view-container {
     width: 90vw;
-    max-width: 1200px; /* Add a max-width for very large screens */
+    max-width: 1920px; /* Add a max-width for very large screens */
     margin: auto;
 }
 
@@ -297,7 +361,7 @@
     margin: auto;
     padding: 20px;
     width: 90%;
-    max-width: 1200px;
+    max-width: 1920px;
 }
 
 .view-controls {

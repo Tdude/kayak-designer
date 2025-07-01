@@ -3,7 +3,7 @@
  * Plugin Name:       Kayak Designer
  * Plugin URI:        https://example.com/plugins/the-basics/
  * Description:       Allows users to customize kayak designs with colors, patterns, and accessories, then download their creations as PDF or SVG files.
- * Version:           1.1.1
+ * Version:           1.3
  * Requires at least: 5.2
  * Requires PHP:      7.2
  * Author:            Tibor Berki
@@ -153,40 +153,39 @@ function kayak_designer_field_api_key_html() {
  * @param string $id The id for the hidden input field.
  * @param string $default_color The default hex color value.
  */
-function kayak_designer_render_ral_palette($name, $id, $default_color) {
+function kayak_designer_render_ral_palette($id, $name, $default_color) {
     $ral_colors = [
         'RAL 1000' => '#CCC58F', 'RAL 1001' => '#D1B784', 'RAL 1002' => '#D2B471', 'RAL 1003' => '#F2C300', 'RAL 1004' => '#E6B800', 'RAL 1005' => '#D4A000', 'RAL 1006' => '#E1A100', 'RAL 1007' => '#E69400', 'RAL 1011' => '#A98358', 'RAL 1012' => '#C0AB5F', 'RAL 1013' => '#E9E5CE', 'RAL 1014' => '#DFCEA1', 'RAL 1015' => '#E9DAB9', 'RAL 1016' => '#F2F03C', 'RAL 1017' => '#F5D03D', 'RAL 1018' => '#F8F32B', 'RAL 1019' => '#A49C8D', 'RAL 1020' => '#9A9478', 'RAL 1021' => '#F2C300', 'RAL 1023' => '#F5BE00', 'RAL 1024' => '#B89C6B', 'RAL 1026' => '#F9FF00', 'RAL 1027' => '#9E906E', 'RAL 1028' => '#F4A800', 'RAL 1032' => '#DDB200', 'RAL 1033' => '#F3A505', 'RAL 1034' => '#EFA444', 'RAL 1035' => '#6F6756', 'RAL 1036' => '#6A5F4B', 'RAL 1037' => '#ECA529',
         'RAL 2000' => '#ED7E00', 'RAL 2001' => '#C15821', 'RAL 2002' => '#CB4A32', 'RAL 2003' => '#FA842B', 'RAL 2004' => '#E87700', 'RAL 2005' => '#FF2300', 'RAL 2007' => '#FFAA3C', 'RAL 2008' => '#F3752C', 'RAL 2009' => '#E56D28', 'RAL 2010' => '#D4652F', 'RAL 2011' => '#EC7C25', 'RAL 2012' => '#DB6A50', 'RAL 2013' => '#A34A28',
-        'RAL 3000' => '#B22222', 'RAL 3001' => '#9B2423', 'RAL 3002' => '#9A2A29', 'RAL 3003' => '#8B2222', 'RAL 3004' => '#6E262F', 'RAL 3005' => '#5A2328', 'RAL 3007' => '#3E282A', 'RAL 3009' => '#6C3736', 'RAL 3011' => '#7B2E2E', 'RAL 3012' => '#C1877E', 'RAL 3013' => '#9C3436', 'RAL 3014' => '#D47479', 'RAL 3015' => '#E1A6AD', 'RAL 3016' => '#B14A3C', 'RAL 3017' => '#D8636F', 'RAL 3018' => '#D14257', 'RAL 3020' => '#C41E25', 'RAL 3022' => '#D56D4C', 'RAL 3024' => '#FF0000', 'RAL 3026' => '#FF0000', 'RAL 3027' => '#C83C50', 'RAL 3028' => '#D83E34', 'RAL 3031' => '#A73A46', 'RAL 3032' => '#742326', 'RAL 3033' => '#B54C43',
-        'RAL 4001' => '#6A4975', 'RAL 4002' => '#863D4A', 'RAL 4003' => '#D15B8F', 'RAL 4004' => '#64244C', 'RAL 4005' => '#6C5996', 'RAL 4006' => '#923B7A', 'RAL 4007' => '#452947', 'RAL 4008' => '#864982', 'RAL 4009' => '#9D8499', 'RAL 4010' => '#CF4A7B', 'RAL 4011' => '#8A63AB', 'RAL 4012' => '#6B688C',
-        'RAL 5000' => '#354D73', 'RAL 5001' => '#1F3453', 'RAL 5002' => '#20214F', 'RAL 5003' => '#2A3458', 'RAL 5004' => '#1D1E22', 'RAL 5005' => '#1E2460', 'RAL 5007' => '#3E5F8A', 'RAL 5008' => '#313C49', 'RAL 5009' => '#2E5A88', 'RAL 5010' => '#00508C', 'RAL 5011' => '#232837', 'RAL 5012' => '#2E84C5', 'RAL 5013' => '#252C48', 'RAL 5014' => '#606E8C', 'RAL 5015' => '#0071B5', 'RAL 5017' => '#00659D', 'RAL 5018' => '#25858E', 'RAL 5019' => '#005A93', 'RAL 5020' => '#00313C', 'RAL 5021' => '#007C80', 'RAL 5022' => '#2A2754', 'RAL 5023' => '#4D658D', 'RAL 5024' => '#5D8DBE', 'RAL 5025' => '#4A79A5', 'RAL 5026' => '#13264D',
+        'RAL 3000' => '#C1121C', 'RAL 3001' => '#A1232B', 'RAL 3002' => '#A1232B', 'RAL 3003' => '#8A1E25', 'RAL 3004' => '#701F29', 'RAL 3005' => '#5A1F26', 'RAL 3007' => '#412227', 'RAL 3009' => '#642F28', 'RAL 3011' => '#792429', 'RAL 3012' => '#C3877B', 'RAL 3013' => '#A23D3B', 'RAL 3014' => '#D47479', 'RAL 3015' => '#E2A6B3', 'RAL 3016' => '#B14A3C', 'RAL 3017' => '#D46A73', 'RAL 3018' => '#D15368', 'RAL 3020' => '#C1121C', 'RAL 3022' => '#D57E68', 'RAL 3024' => '#C8242B', 'RAL 3026' => '#D31F31', 'RAL 3027' => '#C12036', 'RAL 3028' => '#CB3234', 'RAL 3031' => '#B5334D',
+        'RAL 4001' => '#6D5484', 'RAL 4002' => '#8F3F51', 'RAL 4003' => '#D15B8F', 'RAL 4004' => '#641C34', 'RAL 4005' => '#8179B7', 'RAL 4006' => '#992572', 'RAL 4007' => '#4A2545', 'RAL 4008' => '#8F4386', 'RAL 4009' => '#A4869D', 'RAL 4010' => '#CF458C', 'RAL 4011' => '#8660A0', 'RAL 4012' => '#696A9F',
+        'RAL 5000' => '#354D73', 'RAL 5001' => '#1F4274', 'RAL 5002' => '#20214F', 'RAL 5003' => '#2A3756', 'RAL 5004' => '#1D1E22', 'RAL 5005' => '#1E428A', 'RAL 5007' => '#49678D', 'RAL 5008' => '#363E4A', 'RAL 5009' => '#41677D', 'RAL 5010' => '#254E83', 'RAL 5011' => '#232C3F', 'RAL 5012' => '#3B83BD', 'RAL 5013' => '#1E253A', 'RAL 5014' => '#626C86', 'RAL 5015' => '#2575B0', 'RAL 5017' => '#00538A', 'RAL 5018' => '#3F888F', 'RAL 5019' => '#1B5583', 'RAL 5020' => '#1E3441', 'RAL 5021' => '#25796D', 'RAL 5022' => '#252850', 'RAL 5023' => '#49678D', 'RAL 5024' => '#5D9DBB', 'RAL 5025' => '#256D7B', 'RAL 5026' => '#002E63',
         'RAL 6000' => '#316548', 'RAL 6001' => '#2E6444', 'RAL 6002' => '#285A43', 'RAL 6003' => '#424632', 'RAL 6004' => '#004242', 'RAL 6005' => '#0F2D24', 'RAL 6006' => '#3C3D34', 'RAL 6007' => '#283418', 'RAL 6008' => '#342D21', 'RAL 6009' => '#26392F', 'RAL 6010' => '#468641', 'RAL 6011' => '#648266', 'RAL 6012' => '#2C3E3B', 'RAL 6013' => '#7C7B52', 'RAL 6014' => '#444337', 'RAL 6015' => '#3B3C36', 'RAL 6016' => '#008463', 'RAL 6017' => '#448A64', 'RAL 6018' => '#599F45', 'RAL 6019' => '#BDECB6', 'RAL 6020' => '#354733', 'RAL 6021' => '#87A180', 'RAL 6022' => '#3A352A', 'RAL 6024' => '#3D775F', 'RAL 6025' => '#53755C', 'RAL 6026' => '#005A52', 'RAL 6027' => '#81C3C5', 'RAL 6028' => '#2E554A', 'RAL 6029' => '#007054', 'RAL 6032' => '#00846B', 'RAL 6033' => '#499E8D', 'RAL 6034' => '#7FB5B5', 'RAL 6035' => '#1E4531', 'RAL 6036' => '#005950', 'RAL 6037' => '#009B47', 'RAL 6038' => '#00B44F',
         'RAL 7000' => '#7E8B92', 'RAL 7001' => '#8A9597', 'RAL 7002' => '#817F65', 'RAL 7003' => '#7A7B6D', 'RAL 7004' => '#9EA1A1', 'RAL 7005' => '#6C7070', 'RAL 7006' => '#716A5C', 'RAL 7008' => '#6A5F31', 'RAL 7009' => '#5A6351', 'RAL 7010' => '#535A5C', 'RAL 7011' => '#535D69', 'RAL 7012' => '#586069', 'RAL 7013' => '#555548', 'RAL 7015' => '#4E545A', 'RAL 7016' => '#383E42', 'RAL 7021' => '#2E3236', 'RAL 7022' => '#4D4D44', 'RAL 7023' => '#808279', 'RAL 7024' => '#474A51', 'RAL 7026' => '#36454F', 'RAL 7030' => '#929284', 'RAL 7031' => '#5B6971', 'RAL 7032' => '#B9B79F', 'RAL 7033' => '#82897D', 'RAL 7034' => '#8F8B73', 'RAL 7035' => '#D7D7D7', 'RAL 7036' => '#939698', 'RAL 7037' => '#83898E', 'RAL 7038' => '#B5B8B1', 'RAL 7039' => '#6B685E', 'RAL 7040' => '#9DA3A6', 'RAL 7042' => '#91969A', 'RAL 7043' => '#4E5455', 'RAL 7044' => '#CACBCB', 'RAL 7045' => '#92999E', 'RAL 7046' => '#818C95', 'RAL 7047' => '#D0D0D0', 'RAL 7048' => '#898176',
         'RAL 8000' => '#8F734B', 'RAL 8001' => '#9C6B3C', 'RAL 8002' => '#79553D', 'RAL 8003' => '#87532F', 'RAL 8004' => '#8F4E35', 'RAL 8007' => '#6F4A2F', 'RAL 8008' => '#6F4F28', 'RAL 8011' => '#593C2D', 'RAL 8012' => '#603B3D', 'RAL 8014' => '#4A362B', 'RAL 8015' => '#5A3A35', 'RAL 8016' => '#4C2F27', 'RAL 8017' => '#45322E', 'RAL 8019' => '#473A39', 'RAL 8022' => '#212121', 'RAL 8023' => '#A25F2A', 'RAL 8024' => '#79503A', 'RAL 8025' => '#755C48', 'RAL 8028' => '#4E3B2B', 'RAL 8029' => '#8E402A',
         'RAL 9001' => '#FDF4E3', 'RAL 9002' => '#E7EBDA', 'RAL 9003' => '#F4F4F4', 'RAL 9004' => '#2E2E2E', 'RAL 9005' => '#0A0A0A', 'RAL 9006' => '#A5A9A8', 'RAL 9007' => '#8F8F8C', 'RAL 9010' => '#FFFFFF', 'RAL 9011' => '#1C1C1C', 'RAL 9016' => '#F6F6F6', 'RAL 9017' => '#2A2A2B', 'RAL 9018' => '#D7D9D8', 'RAL 9022' => '#9C9A9D', 'RAL 9023' => '#828385'
     ];
 
-    // Find the name of the default color, or use the hex code if not found.
-    $default_ral_name = array_search(strtoupper($default_color), array_map('strtoupper', $ral_colors));
-    if ($default_ral_name === false) {
-        $default_ral_name = $default_color;
+    // Find the name of the default color
+    $default_color_name = array_search(strtoupper($default_color), array_map('strtoupper', $ral_colors));
+    if ($default_color_name === false) {
+        $default_color_name = 'Select Color'; // Fallback
     }
 
     echo '<div class="ral-palette-container">';
-    echo "<input type='hidden' id='" . esc_attr($id) . "' name='" . esc_attr($name) . "' value='" . esc_attr($default_color) . "' class='color-input'>";
-    
-    // The currently selected color preview, which is also the dropdown toggle.
-    echo '<div class="selected-color-preview" title="' . esc_attr($default_ral_name) . ' (' . esc_attr($default_color) . ')" style="background-color:' . esc_attr($default_color) . ';"></div>';
-
-    // The hidden grid of all available colors.
-    echo '<div class="ral-palette-grid-wrapper is-hidden">';
-    echo '<div class="ral-palette-grid">';
+    echo '  <input type="hidden" id="' . esc_attr($id) . '" name="' . esc_attr($name) . '" value="' . esc_attr($default_color) . '" class="color-input">';
+    echo '  <div class="selected-color-wrapper">';
+    echo '      <div class="selected-color-preview" style="background-color:' . esc_attr($default_color) . ';"></div>';
+    echo '      <span class="selected-color-name">' . esc_html($default_color_name) . '</span>';
+    echo '  </div>';
+    echo '  <div class="ral-palette-grid-wrapper is-hidden">';
+    echo '      <div class="ral-palette-grid">';
     foreach ($ral_colors as $ral_name => $hex) {
-        echo '<div class="ral-swatch" data-color="' . esc_attr($hex) . '" data-ral-name="' . esc_attr($ral_name) . '" title="' . esc_attr($ral_name) . ' (' . esc_attr($hex) . ')" style="background-color:' . esc_attr($hex) . ';"></div>';
+        echo '<div class="ral-swatch" data-color="' . esc_attr($hex) . '" data-color-name="' . esc_attr($ral_name) . '" title="' . esc_attr($ral_name) . '" style="background-color:' . esc_attr($hex) . ';"></div>';
     }
-    echo '</div>'; // end .ral-palette-grid
-    echo '</div>'; // end .ral-palette-grid-wrapper
-    echo '</div>'; // end .ral-palette-container
+    echo '      </div>'; // .ral-palette-grid
+    echo '  </div>'; // .ral-palette-grid-wrapper
+    echo '</div>'; // .ral-palette-container
 }
 
 function kayak_designer_shortcode_handler($atts) {
@@ -219,8 +218,9 @@ function kayak_designer_shortcode_handler($atts) {
                 <div id="kayak-side-view-deck-color" class="color-layer"></div>
                 <div id="kayak-side-view-deck-seam-tape-color" class="color-layer"></div>
                 <div id="kayak-side-view-lines-color" class="color-layer"></div>
-
                 <div id="kayak-side-view-cockpit-rim-color" class="color-layer"></div>
+                <div id="kayak-side-view-accent-front-color" class="color-layer"></div>
+                <div id="kayak-side-view-accent-rear-color" class="color-layer"></div>
                 <div id="kayak-side-view-logo-color" class="color-layer logo-layer"></div>
                 <img id="kayak-side-view-hardware" class="hardware-layer" src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'assets/images/hardware/side_view_hardware.png'); ?>" alt="Kayak Side Hardware">
                 <!-- Overlays for patterns and logos will go on top of color layers -->
@@ -235,89 +235,77 @@ function kayak_designer_shortcode_handler($atts) {
         </div>
 
         <div id="kayak-color-controls">
-            <h2>Choose colors & layup</h2>
+            <h3>Choose Colors &amp; Layup</h3>
 
-            <!-- DECK OPTIONS -->
-            <h3>Deck</h3>
-            <div>
-                <label for="deck-color">Deck base color:</label>
-                <?php kayak_designer_render_ral_palette('deck-color', 'deck-color', '#F4F4F4'); ?>
-            </div>
-
-            <!-- HULL OPTIONS -->
-            <h3>Hull</h3>
-            <div class="control-group-horizontal">
-                <div>
-                    <label>Hull finish:</label>
+            <div class="controls-grid">
+                <div class="control-section">
+                    <h4>Deck/Hull colors</h4>
+                    <div class="grid-2-col">
+                        <div class="control-group">
+                            <label for="deck-color">Deck base:</label>
+                            <?php kayak_designer_render_ral_palette('deck-color', 'deck-color', '#F4F4F4'); ?>
+                        </div>
+                        <div class="control-group">
+                            <label for="hull-color">Hull base:</label>
+                            <?php kayak_designer_render_ral_palette('hull-color', 'hull-color', '#E0E0E0'); ?>
+                        </div>
+                    </div>
+                    <label for="hull-finish" style="margin-top: 15px;">Hull material finish:</label>
                     <select id="hull-finish" name="hull-finish">
                         <option value="standard">Standard</option>
                         <option value="carbon">Carbon</option>
                         <option value="carbon_kevlar">Carbon Kevlar</option> 
                     </select>
-                </div>
-                <div>
-                    <label for="hull-color">Hull base color:</label>
-                    <?php kayak_designer_render_ral_palette('hull-color', 'hull-color', '#E0E0E0'); ?>
-                </div>
-            </div>
 
-            <!-- ACCESSORIES -->
-            <h3>Accessories</h3>
-            <div class="control-group-horizontal">
-                <div>
-                    <label for="deck-seam-tape-color">Seam tape:</label>
-                    <?php kayak_designer_render_ral_palette('deck-seam-tape-color', 'deck-seam-tape-color', '#0A0A0A'); ?>
+                    <h4>Logos</h4>
+                    <label for="logo-color">Logo color:</label>
+                    <?php kayak_designer_render_ral_palette('logo-color', 'logo-color', '#FFFFFF'); ?>
                 </div>
-                <div>
-                    <label for="lines-color">Lines:</label>
-                    <?php kayak_designer_render_ral_palette('lines-color', 'lines-color', '#000000'); ?>
-                </div>
-                <div>
-                    <label for="accent-front-color">Front accent:</label>
-                    <?php kayak_designer_render_ral_palette('accent-front-color', 'accent-front-color', '#C0C0C0'); ?>
-                </div>
-                <div>
-                    <label for="accent-rear-color">Rear accent:</label>
-                    <?php kayak_designer_render_ral_palette('accent-rear-color', 'accent-rear-color', '#C0C0C0'); ?>
-                </div>
-                <div>
-                    <label for="cockpit-rim-color">Cockpit rim:</label>
-                    <?php kayak_designer_render_ral_palette('cockpit-rim-color', 'cockpit-rim-color', '#333333'); ?>
-                </div>
-                <div>
-                    <label for="seat-color">Seat color:</label>
-                    <?php kayak_designer_render_ral_palette('seat-color', 'seat-color', '#555555'); ?>
-                </div>
-            </div>
 
-            <!-- LOGOS -->
-            <h3>Logos</h3>
-            <div>
-                <label for="logo-color">Logo color:</label>
-                <?php kayak_designer_render_ral_palette('logo-color', 'logo-color', '#FFFFFF'); ?>
-            </div>
-            </div>
-
-            <!-- EXPORT -->
-            <h3>Export</h3>
-            <div>
-                <button id="export-png-button" class="button button-primary">Export as PNG</button>
-                <button id="export-pdf-button" class="button">Export as PDF</button>
-            </div>
-
-            <!-- MANAGE DESIGN -->
-            <h3>Manage Design</h3>
-            <div id="design-management-controls">
-                <div>
-                    <label for="design-name">Design Name:</label>
-                    <input type="text" id="design-name" name="design-name" placeholder="My Awesome Qajaq">
-                    <button id="save-design-button" class="button">Save Design</button>
+                <div class="control-section">
+                    <h4>Accessories</h4>
+                    <div class="grid-2-col">
+                        <div class="control-group">
+                            <label for="deck-seam-tape-color">Seam tape:</label>
+                            <?php kayak_designer_render_ral_palette('deck-seam-tape-color', 'deck-seam-tape-color', '#0A0A0A'); ?>
+                        </div>
+                        <div class="control-group">
+                            <label for="lines-color">Lines:</label>
+                            <?php kayak_designer_render_ral_palette('lines-color', 'lines-color', '#000000'); ?>
+                        </div>
+                        <div class="control-group">
+                            <label for="accent-front-color">Front accent:</label>
+                            <?php kayak_designer_render_ral_palette('accent-front-color', 'accent-front-color', '#C0C0C0'); ?>
+                        </div>
+                        <div class="control-group">
+                            <label for="accent-rear-color">Rear accent:</label>
+                            <?php kayak_designer_render_ral_palette('accent-rear-color', 'accent-rear-color', '#C0C0C0'); ?>
+                        </div>
+                        <div class="control-group">
+                            <label for="cockpit-rim-color">Cockpit rim:</label>
+                            <?php kayak_designer_render_ral_palette('cockpit-rim-color', 'cockpit-rim-color', '#333333'); ?>
+                        </div>
+                        <div class="control-group">
+                            <label for="seat-color">Seat color:</label>
+                            <?php kayak_designer_render_ral_palette('seat-color', 'seat-color', '#555555'); ?>
+                        </div>
+                    </div>
                 </div>
-                <div style="margin-top: 10px;">
+
+                <div class="control-section">
+                    <h4>Manage &amp; Save</h4>
                     <label for="saved-designs-select">Load Design:</label>
-                    <select id="saved-designs-select" name="saved-designs-select">
-                        <option value="">Select a Design from your browser</option>
+                    <select id="saved-designs-select" name="saved-designs-select" style="margin-bottom: 15px;">
+                        <option value="">Select a Design...</option>
                     </select>
+                    <label for="design-name">Design Name:</label>
+                    <input type="text" id="design-name" name="design-name" placeholder="e.g., My Awesome Kayak">
+                    <button id="save-design-button" class="button" style="margin: 1em 0; width: 100%;">Save Design</button>
+
+                    <h4>Export</h4>
+                    <p>Download your creation.</p>
+                    <button id="export-png-button" class="button button-primary" style="width: 100%; margin-bottom: 10px;">Export as PNG</button>
+                    <button id="export-pdf-button" class="button" style="width: 100%;">Export as PDF</button>
                 </div>
             </div>
         </div>
