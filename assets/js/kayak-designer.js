@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- NEW: DYNAMIC ASSET LOADING FOR MULTI-MODEL SUPPORT ---
+    // --- 2: DYNAMIC ASSET LOADING FOR MULTI-MODEL SUPPORT ---
 
     const updateKayakAssets = (modelName) => {
         if (!modelName) return;
@@ -125,9 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 2. EXPORT FUNCTIONALITY ---
-
-    // --- Canvas-based Export --- 
+    // --- 3. EXPORT FUNCTIONALITY ---
 
     // Helper to load an image and handle CORS
     const loadImage = (src) => {
@@ -249,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pdf.save('kayak-design.pdf');
     };
 
-    // --- 3. DESIGN MANAGEMENT (SAVE/LOAD) ---
+    // --- 4. DESIGN MANAGEMENT (SAVE/LOAD) ---
 
     const LOCAL_STORAGE_KEY = 'kayak_designer_designs';
 
@@ -312,31 +310,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isUserLoggedIn === 'true') {
             // Logged-in user: Save to database via AJAX
-            const body = new URLSearchParams({
-                action: 'save_kayak_design',
-                nonce: nonce,
-                design_name: designName,
-                design_data: JSON.stringify(designData)
-            });
-            const response = await fetch(ajaxUrl, { method: 'POST', body });
-            const result = await response.json();
-            alert(result.success ? 'Design saved to your account!' : `Error: ${result.data}`);
-            if (result.success) loadDesigns();
+            const modelName = document.getElementById('kayak-model-select').value;
+            const formData = new FormData();
+            formData.append('action', 'save_kayak_design');
+            formData.append('nonce', nonce);
+            formData.append('design_name', designName);
+            formData.append('design_data', JSON.stringify(designData));
+            formData.append('model_name', modelName);
+
+            try {
+                // Generate preview image
+                const previewCanvas = await createCombinedCanvas();
+                const previewImage = previewCanvas.toDataURL('image/png'); // Get as Base64
+                formData.append('preview_image', previewImage);
+
+                const response = await fetch(ajaxUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                alert(result.success ? 'Design saved successfully.' : `Error: ${result.data}`);
+                if (result.success) {
+                    loadDesigns();
+                }
+            } catch (error) {
+                console.error('Error saving design:', error);
+                alert('An error occurred while saving the design.');
+            }
         } else {
             // Guest user: Save to local storage
-            console.log('Attempting to save design to local storage for guest user.');
-            console.log('Design Name:', designName);
-            console.log('Design Data:', JSON.stringify(designData, null, 2));
             try {
                 const designs = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {};
-                console.log('Existing designs from local storage:', designs);
-                
                 designs[designName] = designData;
-                console.log('Updated designs object to be saved:', designs);
-
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(designs));
-                console.log('Successfully called localStorage.setItem. Please verify in browser dev tools.');
-
                 alert('Design saved to your browser!');
                 loadDesigns();
             } catch (e) {
@@ -355,16 +361,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isUserLoggedIn === 'true') {
             // Logged-in user: Load from database
-            const response = await fetch(`${ajaxUrl}?action=get_kayak_designs&nonce=${nonce}`);
-            const result = await response.json();
-            if (result.success) {
-                result.data.forEach(design => {
-                    select.add(new Option(design.name, design.id));
-                });
+            try {
+                const response = await fetch(`${ajaxUrl}?action=get_kayak_designs&nonce=${nonce}`);
+                const result = await response.json();
+                
+                console.log('AJAX response for get_kayak_designs:', result); // DEBUGGING
+
+                if (result.success) {
+                    if (result.data.length === 0) {
+                        console.log('No designs found in the database for the current user.');
+                    }
+                    result.data.forEach(design => {
+                        select.add(new Option(design.name, design.id));
+                    });
+                } else {
+                    console.error('Failed to load designs:', result.data);
+                }
+            } catch (error) {
+                console.error('Error fetching designs:', error);
             }
         } else {
             // Guest user: Load from local storage
-            const designs = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {};
+            let designs = {};
+            try {
+                const storedDesigns = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (storedDesigns) {
+                    designs = JSON.parse(storedDesigns);
+                }
+                // Validate that the parsed data is a non-null object
+                if (typeof designs !== 'object' || designs === null || Array.isArray(designs)) {
+                    throw new Error('Stored data is not a valid object.');
+                }
+            } catch (e) {
+                console.error('Could not parse designs from local storage. Clearing invalid data.', e);
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                designs = {}; // Reset to empty object
+            }
+            
             Object.keys(designs).forEach(name => {
                 select.add(new Option(name, name));
             });
@@ -410,35 +443,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 4. MODAL (FULL-SCREEN VIEW) ---
+    // --- 5. MODAL (FULL-SCREEN VIEW) ---
 
     const initializeModal = () => {
         const modal = document.getElementById('kayak-designer-modal');
-        if (!modal) return;
-        const closeBtn = modal.querySelector('.modal-close');
-        const contentWrapper = document.getElementById('modal-content-wrapper');
 
+        // If the designer modal isn't on the page, do nothing.
+        // This is expected on pages that only have the gallery shortcode.
+        if (!modal) {
+            return;
+        }
+
+        const closeButton = modal.querySelector('.kayak-modal-close');
+        const modalContentWrapper = modal.querySelector('.kayak-modal-content-wrapper');
+
+        // Also check for the parts of the modal
+        if (!closeButton || !modalContentWrapper) {
+            console.error('Modal components not found. Modal functionality disabled.');
+            return;
+        }
+
+        // Function to open the modal with a specific view
+        const openModal = (viewContainer) => {
+            if (!viewContainer) return;
+            const clonedView = viewContainer.cloneNode(true);
+            modalContentWrapper.innerHTML = ''; // Clear previous content
+            modalContentWrapper.appendChild(clonedView);
+            modal.style.display = 'block';
+        };
+
+        // Function to close the modal
+        const closeModal = () => {
+            modal.style.display = 'none';
+            modalContentWrapper.innerHTML = ''; // Clean up
+        };
+
+        // Add listeners to zoom icons
         document.querySelectorAll('.zoom-icon').forEach(icon => {
             icon.addEventListener('click', (e) => {
                 const view = e.target.dataset.view;
-                const containerToClone = document.getElementById(`kayak-${view}-view-container`);
-                const clone = containerToClone.cloneNode(true);
-                clone.querySelector('.zoom-icon').remove(); // Remove icon from cloned view
-                contentWrapper.innerHTML = '';
-                contentWrapper.appendChild(clone);
-                modal.classList.add('modal-visible');
+                const viewContainer = document.getElementById(`kayak-${view}-view-container`);
+                if (viewContainer) {
+                    openModal(viewContainer);
+                }
             });
         });
 
-        closeBtn.addEventListener('click', () => modal.classList.remove('modal-visible'));
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.classList.remove('modal-visible');
+        // Add listeners for closing the modal
+        closeButton.addEventListener('click', closeModal);
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
         });
     };
 
-    // --- 5. INITIALIZATION ---
-
     const initializeDesigner = () => {
+        const designerContainer = document.getElementById('kayak-designer-container');
+        // If the main designer container isn't on the page, don't initialize any of the designer-specific logic.
+        if (!designerContainer) {
+            return;
+        }
         // --- Model Switching Logic ---
         const modelSelect = document.getElementById('kayak-model-select');
         if (modelSelect) {
@@ -499,10 +564,191 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set initial states
         handleHullAppearanceChange();
         initializeModal();
-        loadDesigns(); 
         console.log('Kayak Designer Initialized');
     };
 
-    // Run the initializer
-    initializeDesigner();
+    // --- 6. GALLERY VOTING ---
+
+    const handleVoteClick = async (e) => {
+        if (!e.target.classList.contains('vote-button')) return;
+
+        const button = e.target;
+        const designId = button.dataset.designId;
+        const nonce = button.dataset.nonce;
+
+        // Check if user is logged in (using a simple check for a WordPress admin bar)
+        const isLoggedIn = document.body.classList.contains('logged-in');
+
+        if (isLoggedIn) {
+            // --- Logged-in user voting ---
+            button.disabled = true;
+            const formData = new FormData();
+            formData.append('action', 'kayak_designer_handle_vote');
+            formData.append('design_id', designId);
+            formData.append('nonce', nonce);
+
+            try {
+                const response = await fetch(ajaxUrl, { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.success) {
+                    const voteCountSpan = button.parentElement.querySelector('.vote-count');
+                    if (voteCountSpan) voteCountSpan.textContent = result.data.new_vote_count;
+                    button.textContent = 'Voted!';
+                } else {
+                    alert(`Error: ${result.data}`);
+                    button.disabled = false;
+                }
+            } catch (error) {
+                console.error('Vote request failed:', error);
+                button.disabled = false;
+            }
+        } else {
+            // --- Guest voting: show email form ---
+            let form = button.nextElementSibling;
+            if (form && form.classList.contains('guest-vote-form')) {
+                form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            } else {
+                form = document.createElement('form');
+                form.className = 'guest-vote-form';
+                form.innerHTML = `
+                    <input type="email" placeholder="Enter your email to vote" required />
+                    <button type="submit">Confirm Vote</button>
+                `;
+                button.after(form);
+
+                form.addEventListener('submit', async (ev) => {
+                    ev.preventDefault();
+                    const emailInput = form.querySelector('input[type="email"]');
+                    const email = emailInput.value;
+                    const submitButton = form.querySelector('button');
+
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Sending...';
+
+                    const formData = new FormData();
+                    formData.append('action', 'kayak_designer_request_guest_vote');
+                    formData.append('design_id', designId);
+                    formData.append('email', email);
+                    formData.append('nonce', nonce);
+
+                    try {
+                        const response = await fetch(ajaxUrl, { method: 'POST', body: formData });
+                        const result = await response.json();
+                        if (result.success) {
+                            form.innerHTML = `<p>${result.data}</p>`;
+                        } else {
+                            alert(`Error: ${result.data}`);
+                            submitButton.disabled = false;
+                            submitButton.textContent = 'Confirm Vote';
+                        }
+                    } catch (error) {
+                        console.error('Guest vote request failed:', error);
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Confirm Vote';
+                    }
+                });
+            }
+        }
+    };
+
+    // Attach listener to the body to catch clicks on buttons in the shortcode content
+    document.body.addEventListener('click', handleVoteClick);
+
+    // --- 7. VOTE CONFIRMATION ALERT ---
+    const showVoteConfirmationAlert = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('vote_confirmed')) {
+            alert('Thank you! Your vote has been confirmed.');
+            // Clean the URL
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+        }
+    };
+
+    const initializeGalleryModal = () => {
+    const gallery = document.querySelector('.kayak-design-gallery');
+    if (!gallery) return; // Exit if no gallery on the page.
+
+    // 1. Create and inject the modal HTML if it doesn't already exist.
+    if (!document.getElementById('kayak-gallery-modal')) {
+        const modalHTML = `
+            <div id="kayak-gallery-modal" class="kayak-modal">
+                <div class="kayak-modal-content-wrapper">
+                    <span class="kayak-modal-close">&times;</span>
+                    <figure>
+                        <img id="kayak-gallery-modal-image" class="kayak-modal-content" src="" alt="Full-size design">
+                        <figcaption id="kayak-gallery-modal-title"></figcaption>
+                    </figure>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    // 2. Get modal elements
+    const galleryModal = document.getElementById('kayak-gallery-modal');
+    const modalImage = document.getElementById('kayak-gallery-modal-image');
+    const modalTitle = document.getElementById('kayak-gallery-modal-title');
+    const closeButton = galleryModal.querySelector('.kayak-modal-close');
+
+    // 3. Prepare each gallery item with data attributes
+    gallery.querySelectorAll('.gallery-item').forEach(item => {
+        const preview = item.querySelector('.gallery-item-preview img');
+        const titleEl = item.querySelector('h3');
+        const imagePreviewLink = item.querySelector('.gallery-item-preview');
+
+        if (preview && titleEl && imagePreviewLink) {
+            const highResSrc = imagePreviewLink.dataset.highResImage || preview.src;
+            const title = titleEl.textContent.trim();
+            // Set the data attributes on the clickable preview element
+            imagePreviewLink.dataset.modalImage = highResSrc;
+            imagePreviewLink.dataset.modalTitle = title;
+        }
+    });
+
+    // 4. Define modal open/close functions
+    const openModal = (imageSrc, title) => {
+        modalImage.src = imageSrc;
+        modalTitle.textContent = title;
+        galleryModal.style.display = 'flex'; // Use flex to center content
+        setTimeout(() => galleryModal.classList.add('modal-visible'), 10); // Add class for fade-in
+    };
+
+    const closeModal = () => {
+        galleryModal.classList.remove('modal-visible');
+        // Wait for the transition to finish before hiding the modal and clearing the src
+        setTimeout(() => {
+            galleryModal.style.display = 'none';
+            modalImage.src = '';
+            modalTitle.textContent = '';
+        }, 300); // Must match CSS transition duration
+    };
+
+    // 5. Add event listeners
+    gallery.addEventListener('click', (e) => {
+        const previewLink = e.target.closest('.gallery-item-preview');
+        if (previewLink && previewLink.dataset.modalImage) {
+            e.preventDefault();
+            const imageSrc = previewLink.dataset.modalImage;
+            const title = previewLink.dataset.modalTitle;
+            openModal(imageSrc, title);
+        }
+    });
+
+    closeButton.addEventListener('click', closeModal);
+
+    galleryModal.addEventListener('click', (e) => {
+        // Close if the user clicks on the dark backdrop (the content wrapper)
+        if (e.target.classList.contains('kayak-modal-content-wrapper')) {
+            closeModal();
+        }
+    });
+};
+
+// --- 9. INITIALIZATION ---
+initializeDesigner();
+loadDesigns();
+showVoteConfirmationAlert();
+initializeGalleryModal();
+
 });

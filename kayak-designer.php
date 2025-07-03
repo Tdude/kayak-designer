@@ -19,6 +19,70 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
+// Define plugin version
+define('KAYAK_DESIGNER_VERSION', '1.3');
+
+/**
+ * Enqueue scripts and styles for the admin area.
+ */
+function kayak_designer_admin_enqueue_scripts($hook) {
+    // Only load on our plugin's settings page
+    if ('settings_page_kayak-designer' !== $hook) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'kayak-designer-admin-settings',
+        plugin_dir_url(__FILE__) . 'admin/js/settings-page.js',
+        ['jquery'],
+        KAYAK_DESIGNER_VERSION,
+        true
+    );
+}
+add_action('admin_enqueue_scripts', 'kayak_designer_admin_enqueue_scripts');
+
+/**
+ * Create custom database table on plugin activation.
+ */
+function kayak_designer_activate() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'kayak_designs';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE $table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+        user_id bigint(20) UNSIGNED NOT NULL,
+        design_name tinytext NOT NULL,
+        design_data longtext NOT NULL,
+        model_name varchar(55) DEFAULT '' NOT NULL,
+        votes int(11) DEFAULT 0 NOT NULL,
+        preview_image longtext NOT NULL,
+        PRIMARY KEY  (id),
+        KEY user_id (user_id)
+    ) $charset_collate;";
+
+    // Create a table for tracking votes with email confirmation
+    $votes_table_name = $wpdb->prefix . 'kayak_design_votes';
+    $sql_votes = "CREATE TABLE $votes_table_name (
+        vote_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        design_id BIGINT(20) UNSIGNED NOT NULL,
+        user_id BIGINT(20) UNSIGNED DEFAULT NULL,
+        email VARCHAR(100) DEFAULT NULL,
+        confirmation_token VARCHAR(64) DEFAULT NULL,
+        status ENUM('pending', 'confirmed') NOT NULL DEFAULT 'pending',
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY  (vote_id),
+        UNIQUE KEY unique_user_vote (design_id, user_id),
+        UNIQUE KEY unique_email_vote (design_id, email)
+    ) $charset_collate;";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+    dbDelta($sql_votes);
+}
+register_activation_hook(__FILE__, 'kayak_designer_activate');
+
 /**
  * The code that runs during plugin activation.
  */
@@ -34,109 +98,6 @@ function deactivate_kayak_designer() {
 	// Deactivation code here.
 }
 register_deactivation_hook( __FILE__, 'deactivate_kayak_designer' );
-
-/**
- * Add options page
- */
-function kayak_designer_options_page() {
-    add_options_page(
-        'Kayak Designer Settings',
-        'Kayak Designer',
-        'manage_options',
-        'kayak-designer',
-        'kayak_designer_options_page_html'
-    );
-}
-add_action('admin_menu', 'kayak_designer_options_page');
-
-/**
- * Render the settings page
- */
-function kayak_designer_options_page_html() {
-    // check user capabilities
-    if (!current_user_can('manage_options')) {
-        return;
-    }
-    ?>
-    <div class="wrap">
-        <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-        <p>To display the Kayak Designer on any page, post, or widget, simply add the following shortcode:</p>
-        <p><code>[kayak_designer]</code></p>
-        <form action="options.php" method="post">
-            <?php
-            // output security fields for the registered setting "kayak_designer"
-            settings_fields('kayak_designer');
-            // output setting sections and their fields
-            do_settings_sections('kayak-designer');
-            // output save settings button
-            submit_button('Save Settings');
-            ?>
-        </form>
-    </div>
-    <?php
-}
-
-/**
- * Register settings
- */
-function kayak_designer_register_settings() {
-    register_setting('kayak_designer', 'kayak_designer_options', [
-        'default' => [
-            'api_key' => '',
-        ],
-        'sanitize_callback' => 'kayak_designer_sanitize_options',
-    ]);
-
-    // API Settings Section (existing)
-    add_settings_section(
-        'kayak_designer_section_api',
-        'API Settings',
-        'kayak_designer_section_api_callback',
-        'kayak-designer'
-    );
-
-    add_settings_field(
-        'kayak_designer_field_api_key',
-        'API Key',
-        'kayak_designer_field_api_key_html',
-        'kayak-designer',
-        'kayak_designer_section_api'
-    );
-
-}
-
-add_action('admin_init', 'kayak_designer_register_settings');
-
-/**
- * Sanitize options
- */
-function kayak_designer_sanitize_options($input) {
-    $output = get_option('kayak_designer_options', []); // Get existing options to preserve them, default to empty array if not set
-    
-    // Sanitize API Key
-    if (isset($input['api_key'])) {
-        $output['api_key'] = sanitize_text_field($input['api_key']);
-    }
-    
-    return $output;
-}
-
-/**
- * Section callback
- */
-function kayak_designer_section_api_callback() {
-    echo '<p>Enter your API settings below.</p>';
-}
-
-/**
- * Field HTML
- */
-function kayak_designer_field_api_key_html() {
-    $options = get_option('kayak_designer_options');
-    ?>
-    <input type="text" name="kayak_designer_options[api_key]" value="<?php echo esc_attr(isset($options['api_key']) ? $options['api_key'] : ''); ?>">
-    <?php
-}
 
 /**
  * Shortcode to display the Kayak Designer.
@@ -252,9 +213,9 @@ function kayak_designer_shortcode_handler($atts) {
         </div>
 
         <!-- Modal for Full-screen View -->
-        <div id="kayak-designer-modal" class="modal-hidden">
-            <span class="modal-close">&times;</span>
-            <div id="modal-content-wrapper"></div>
+        <div id="kayak-designer-modal" class="kayak-modal">
+            <span class="kayak-modal-close">&times;</span>
+            <div class="kayak-modal-content-wrapper"></div>
         </div>
 
         <div id="kayak-color-controls">
@@ -353,7 +314,7 @@ add_shortcode('kayak_designer', 'kayak_designer_shortcode_handler');
  */
 function kayak_designer_enqueue_assets() {
     global $post;
-    if (is_a($post, 'WP_Post') && has_shortcode($post->post_content, 'kayak_designer')) {
+    if (is_a($post, 'WP_Post') && (has_shortcode($post->post_content, 'kayak_designer') || has_shortcode($post->post_content, 'kayak_designer_gallery'))) {
 
         // Enqueue Kayak Designer CSS
         wp_enqueue_style(
@@ -425,27 +386,49 @@ function kayak_designer_save_design() {
 
     $user_id = get_current_user_id();
     $design_name = isset($_POST['design_name']) ? sanitize_text_field($_POST['design_name']) : 'Untitled Design';
-    $design_data = isset($_POST['design_data']) ? json_decode(stripslashes($_POST['design_data']), true) : null;
+    $design_data = isset($_POST['design_data']) ? stripslashes($_POST['design_data']) : null;
+    $model_name = isset($_POST['model_name']) ? sanitize_text_field($_POST['model_name']) : 'default';
+    $preview_image = isset($_POST['preview_image']) ? $_POST['preview_image'] : '';
 
     if (empty($design_name) || !$design_data) {
         wp_send_json_error('Missing data.');
         return;
     }
 
-    $saved_designs = get_user_meta($user_id, 'kayak_designs', true);
-    if (!is_array($saved_designs)) {
-        $saved_designs = [];
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'kayak_designs';
+
+    // Check for an existing identical design for the same user
+    $existing_design = $wpdb->get_var($wpdb->prepare(
+        "SELECT id FROM $table_name WHERE user_id = %d AND design_name = %s AND design_data = %s",
+        $user_id,
+        $design_name,
+        $design_data
+    ));
+
+    if ($existing_design) {
+        wp_send_json_error('You have already saved this exact design with the same name.');
+        return;
     }
 
-    $design_id = sanitize_title($design_name);
-    $saved_designs[$design_id] = [
-        'name' => $design_name,
-        'data' => $design_data
-    ];
+    $result = $wpdb->insert(
+        $table_name,
+        [
+            'created_at'  => current_time('mysql'),
+            'user_id'     => $user_id,
+            'design_name' => $design_name,
+            'design_data' => $design_data, // Already a JSON string from the client
+            'model_name'  => $model_name,
+            'preview_image' => $preview_image,
+        ],
+        ['%s', '%d', '%s', '%s', '%s', '%s']
+    );
 
-    update_user_meta($user_id, 'kayak_designs', $saved_designs);
-
-    wp_send_json_success(['message' => 'Design saved!', 'design_id' => $design_id, 'design_name' => $design_name]);
+    if ($result) {
+        wp_send_json_success('Design saved successfully.');
+    } else {
+        wp_send_json_error('Could not save design to the database. DB Error: ' . $wpdb->last_error);
+    }
 }
 add_action('wp_ajax_save_kayak_design', 'kayak_designer_save_design');
 
@@ -458,19 +441,26 @@ function kayak_designer_get_designs() {
         return;
     }
 
+    global $wpdb;
     $user_id = get_current_user_id();
-    $saved_designs = get_user_meta($user_id, 'kayak_designs', true);
+    $table_name = $wpdb->prefix . 'kayak_designs';
 
-    if (empty($saved_designs)) {
-        wp_send_json_success([]);
+    $designs = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT id, design_name FROM $table_name WHERE user_id = %d ORDER BY created_at DESC",
+            $user_id
+        )
+    );
+
+    if (is_null($designs)) {
+        wp_send_json_error('Failed to retrieve designs.');
         return;
     }
 
-    // Return only names and IDs, not the full data
-    $design_list = [];
-    foreach ($saved_designs as $design_id => $design) {
-        $design_list[] = ['id' => $design_id, 'name' => $design['name']];
-    }
+    // The JS expects an array of objects with 'id' and 'name' keys.
+    $design_list = array_map(function($design) {
+        return ['id' => $design->id, 'name' => $design->design_name];
+    }, $designs);
 
     wp_send_json_success($design_list);
 }
@@ -485,21 +475,38 @@ function kayak_designer_load_design() {
         return;
     }
 
+    global $wpdb;
     $user_id = get_current_user_id();
-    $design_id = isset($_GET['design_id']) ? sanitize_text_field($_GET['design_id']) : null;
+    $design_id = isset($_GET['design_id']) ? absint($_GET['design_id']) : 0;
 
     if (!$design_id) {
         wp_send_json_error('No design ID specified.');
         return;
     }
 
-    $saved_designs = get_user_meta($user_id, 'kayak_designs', true);
+    $table_name = $wpdb->prefix . 'kayak_designs';
 
-    if (isset($saved_designs[$design_id])) {
-        wp_send_json_success($saved_designs[$design_id]['data']);
+    $design_data = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT design_data FROM $table_name WHERE id = %d AND user_id = %d",
+            $design_id,
+            $user_id
+        )
+    );
+
+    if ($design_data) {
+        // The data is stored as a JSON string, which the client-side JS will parse.
+        wp_send_json_success($design_data);
     } else {
-        wp_send_json_error('Design not found.');
+        wp_send_json_error('Design not found or you do not have permission to access it.');
     }
 }
 add_action('wp_ajax_load_kayak_design', 'kayak_designer_load_design');
 
+// Include gallery functions
+require_once plugin_dir_path(__FILE__) . 'gallery-functions.php';
+
+// Load admin settings page
+if (is_admin()) {
+    require_once plugin_dir_path(__FILE__) . 'admin/settings-page.php';
+}
