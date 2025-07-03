@@ -310,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const designData = collectDesignData();
 
-        if (isUserLoggedIn) {
+        if (isUserLoggedIn === 'true') {
             // Logged-in user: Save to database via AJAX
             const body = new URLSearchParams({
                 action: 'save_kayak_design',
@@ -324,10 +324,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.success) loadDesigns();
         } else {
             // Guest user: Save to local storage
+            console.log('Attempting to save design to local storage for guest user.');
+            console.log('Design Name:', designName);
+            console.log('Design Data:', JSON.stringify(designData, null, 2));
             try {
                 const designs = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {};
+                console.log('Existing designs from local storage:', designs);
+                
                 designs[designName] = designData;
+                console.log('Updated designs object to be saved:', designs);
+
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(designs));
+                console.log('Successfully called localStorage.setItem. Please verify in browser dev tools.');
+
                 alert('Design saved to your browser!');
                 loadDesigns();
             } catch (e) {
@@ -341,10 +350,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const select = document.getElementById('saved-designs-select');
         if (!select) return;
         
-        const placeholder = isUserLoggedIn ? 'Select a design from your account...' : 'Select a design from your browser...';
+        const placeholder = isUserLoggedIn === 'true' ? 'Select a design from your account...' : 'Select a design from your browser...';
         select.innerHTML = `<option value="">${placeholder}</option>`;
 
-        if (isUserLoggedIn) {
+        if (isUserLoggedIn === 'true') {
             // Logged-in user: Load from database
             const response = await fetch(`${ajaxUrl}?action=get_kayak_designs&nonce=${nonce}`);
             const result = await response.json();
@@ -367,14 +376,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const designNameInput = document.getElementById('design-name');
         if (!selectedValue) return;
 
-        if (isUserLoggedIn) {
+        if (isUserLoggedIn === 'true') {
             // Logged-in user: Load from database
             const response = await fetch(`${ajaxUrl}?action=load_kayak_design&nonce=${nonce}&design_id=${selectedValue}`);
             const result = await response.json();
+
+            console.log('--- Loading Design from Server ---');
+            console.log('Raw response:', result);
+
             if (result.success) {
-                applyDesign(result.data);
+                console.log('Design data received:', result.data);
+                console.log('Type of design data:', typeof result.data);
+
+                // The data might be a JSON string inside the data property, so we parse it if needed.
+                const designObject = typeof result.data === 'string' ? JSON.parse(result.data) : result.data;
+                
+                console.log('Applying design object:', designObject);
+                applyDesign(designObject);
+
                 // Set design name in input field from the selected option's text
                 designNameInput.value = e.target.options[e.target.selectedIndex].text;
+            } else {
+                console.error('Failed to load design:', result.data);
             }
         } else {
             // Guest user: Load from local storage

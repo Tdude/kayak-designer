@@ -401,7 +401,7 @@ function kayak_designer_enqueue_assets() {
                 'ajaxUrl'        => admin_url('admin-ajax.php'),
                 'patternsPath'   => plugin_dir_url(__FILE__) . 'assets/patterns/',
                 'nonce'          => wp_create_nonce('kayak_designer_nonce'),
-                'isUserLoggedIn' => is_user_logged_in(),
+                'isUserLoggedIn' => is_user_logged_in() ? 'true' : 'false',
                 'modelsList'     => get_kayak_models(),
                 'modelsBaseUrl'  => plugin_dir_url(__FILE__) . 'assets/images/models/'
             ]
@@ -486,7 +486,7 @@ function kayak_designer_load_design() {
     }
 
     $user_id = get_current_user_id();
-    $design_id = isset($_POST['design_id']) ? sanitize_text_field($_POST['design_id']) : null;
+    $design_id = isset($_GET['design_id']) ? sanitize_text_field($_GET['design_id']) : null;
 
     if (!$design_id) {
         wp_send_json_error('No design ID specified.');
