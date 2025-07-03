@@ -84,51 +84,7 @@
 #kayak-top-view-logo-color, #kayak-side-view-logo-color { z-index: 50; }
 #kayak-top-view-lines-color, #kayak-side-view-lines-color { z-index: 60; }
 
-/* Hull Masks */
-#kayak-side-view-hull-color  { -webkit-mask-image: url('../images/masks/hull_side_mask.png'); mask-image: url('../images/masks/hull_side_mask.png'); }
-
-/* Deck Masks */
-#kayak-top-view-deck-color   { -webkit-mask-image: url('../images/masks/deck_top_mask.png'); mask-image: url('../images/masks/deck_top_mask.png'); }
-#kayak-side-view-deck-color  { -webkit-mask-image: url('../images/masks/deck_side_mask.png'); mask-image: url('../images/masks/deck_side_mask.png'); }
-
-/* Deck Seam Tape Masks */
-
-#kayak-side-view-deck-seam-tape-color { -webkit-mask-image: url('../images/masks/seam_tape_side_mask.png'); mask-image: url('../images/masks/seam_tape_side_mask.png'); }
-
-/* Lines Masks */
-#kayak-top-view-lines-color  { -webkit-mask-image: url('../images/masks/lines_top_mask.png'); mask-image: url('../images/masks/lines_top_mask.png'); }
-#kayak-side-view-lines-color { -webkit-mask-image: url('../images/masks/lines_side_mask.png'); mask-image: url('../images/masks/lines_side_mask.png'); }
-
-/* Front Accent Masks */
-#kayak-top-view-accent-front-color  { -webkit-mask-image: url('../images/masks/accent_front_top_mask.png'); mask-image: url('../images/masks/accent_front_top_mask.png'); }
-
-/* Rear Accent Masks */
-#kayak-top-view-accent-rear-color  { -webkit-mask-image: url('../images/masks/accent_rear_top_mask.png'); mask-image: url('../images/masks/accent_rear_top_mask.png'); }
-
-/* Side Accent Masks */
-#kayak-side-view-accent-front-color {
-    -webkit-mask-image: url('../images/masks/accent_front_side_mask.png');
-    mask-image: url('../images/masks/accent_front_side_mask.png');
-}
-
-#kayak-side-view-accent-rear-color {
-    -webkit-mask-image: url('../images/masks/accent_rear_side_mask.png');
-    mask-image: url('../images/masks/accent_rear_side_mask.png');
-}
-
-/* Cockpit & Seat Masks */
-#kayak-top-view-cockpit-rim-color {
-    -webkit-mask-image: url('../images/masks/cockpit_rim_top_mask.png');
-    mask-image: url('../images/masks/cockpit_rim_top_mask.png');
-}
-
-#kayak-side-view-cockpit-rim-color  { -webkit-mask-image: url('../images/masks/cockpit_rim_side_mask.png'); mask-image: url('../images/masks/cockpit_rim_side_mask.png'); }
-#kayak-top-view-seat-color   { -webkit-mask-image: url('../images/masks/seat_top_mask.png'); mask-image: url('../images/masks/seat_top_mask.png'); }
-
-
-/* Logo Masks */
-#kayak-top-view-logo-color   { -webkit-mask-image: url('../images/masks/logos_top_mask.png'); mask-image: url('../images/masks/logos_top_mask.png'); }
-#kayak-side-view-logo-color  { -webkit-mask-image: url('../images/masks/logos_side_mask.png'); mask-image: url('../images/masks/logos_side_mask.png'); }
+/* CSS masks are now applied dynamically via kayak-designer.js to support multiple models. */
 
 /* --------------------------------------------------------------------
    4. Interactive RAL Color Palette

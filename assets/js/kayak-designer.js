@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Ensure localized data from PHP is available
-    if (typeof window.kayakDesignerData === 'undefined' || !window.kayakDesignerData.patternsPath || !window.kayakDesignerData.ajaxUrl || !window.kayakDesignerData.nonce || typeof window.kayakDesignerData.isUserLoggedIn === 'undefined') {
-        console.error('Kayak Designer script failed to load: Missing required PHP-localized variables.');
+    if (typeof window.kayakDesignerData === 'undefined' || !window.kayakDesignerData.patternsPath || !window.kayakDesignerData.ajaxUrl || !window.kayakDesignerData.nonce || typeof window.kayakDesignerData.isUserLoggedIn === 'undefined' || !window.kayakDesignerData.modelsBaseUrl) {
+        console.error('Kayak Designer script failed to load: Missing required PHP-localized variables for models.');
         return;
     }
 
-    const { ajaxUrl, nonce, patternsPath, isUserLoggedIn } = window.kayakDesignerData;
+    const { ajaxUrl, nonce, patternsPath, isUserLoggedIn, modelsBaseUrl } = window.kayakDesignerData;
 
     // --- 1. CORE COLOR AND APPEARANCE LOGIC ---
 
@@ -74,6 +74,54 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show ONLY the hull color picker and its label
             hullColorLabel.style.display = '';
             hullColorPicker.style.display = '';
+        }
+    };
+
+    // --- NEW: DYNAMIC ASSET LOADING FOR MULTI-MODEL SUPPORT ---
+
+    const updateKayakAssets = (modelName) => {
+        if (!modelName) return;
+
+        // Define all parts and their corresponding asset files
+        const assetMap = {
+            // Top View Images
+            'kayak-top-view-img': { type: 'image', src: 'top_view_outline.png' },
+            'kayak-top-view-hardware': { type: 'image', src: 'top_view_hardware.png' },
+            // Side View Images
+            'kayak-side-view-img': { type: 'image', src: 'side_view_outline.png' },
+            'kayak-side-view-hardware': { type: 'image', src: 'side_view_hardware.png' },
+            
+            // Top View Masks
+            'kayak-top-view-deck-color': { type: 'mask', src: 'deck_top_mask.png' },
+            'kayak-top-view-lines-color': { type: 'mask', src: 'lines_top_mask.png' },
+            'kayak-top-view-accent-front-color': { type: 'mask', src: 'accent_front_top_mask.png' },
+            'kayak-top-view-accent-rear-color': { type: 'mask', src: 'accent_rear_top_mask.png' },
+            'kayak-top-view-cockpit-rim-color': { type: 'mask', src: 'cockpit_rim_top_mask.png' },
+            'kayak-top-view-seat-color': { type: 'mask', src: 'seat_top_mask.png' },
+            'kayak-top-view-logo-color': { type: 'mask', src: 'logos_top_mask.png' },
+
+            // Side View Masks
+            'kayak-side-view-hull-color': { type: 'mask', src: 'hull_side_mask.png' },
+            'kayak-side-view-deck-color': { type: 'mask', src: 'deck_side_mask.png' },
+            'kayak-side-view-deck-seam-tape-color': { type: 'mask', src: 'seam_tape_side_mask.png' },
+            'kayak-side-view-lines-color': { type: 'mask', src: 'lines_side_mask.png' },
+            'kayak-side-view-cockpit-rim-color': { type: 'mask', src: 'cockpit_rim_side_mask.png' },
+            'kayak-side-view-accent-front-color': { type: 'mask', src: 'accent_front_side_mask.png' },
+            'kayak-side-view-accent-rear-color': { type: 'mask', src: 'accent_rear_side_mask.png' },
+            'kayak-side-view-logo-color': { type: 'mask', src: 'logos_side_mask.png' },
+        };
+
+        for (const [elementId, asset] of Object.entries(assetMap)) {
+            const element = document.getElementById(elementId);
+            if (!element) continue; // Skip if element doesn't exist
+
+            if (asset.type === 'image') {
+                element.src = `${modelsBaseUrl}${modelName}/${asset.src}`;
+            } else if (asset.type === 'mask') {
+                const maskUrl = `url("${modelsBaseUrl}${modelName}/masks/${asset.src}")`;
+                element.style.webkitMaskImage = maskUrl;
+                element.style.maskImage = maskUrl;
+            }
         }
     };
 
@@ -368,6 +416,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 5. INITIALIZATION ---
 
     const initializeDesigner = () => {
+        // --- Model Switching Logic ---
+        const modelSelect = document.getElementById('kayak-model-select');
+        if (modelSelect) {
+            // Initial asset load based on the default selected model
+            updateKayakAssets(modelSelect.value);
+
+            // Listener for changes
+            modelSelect.addEventListener('change', (e) => {
+                updateKayakAssets(e.target.value);
+            });
+        }
         // Initialize color pickers
         document.querySelectorAll('.ral-palette-container').forEach(container => {
             const colorInput = container.querySelector('.color-input');

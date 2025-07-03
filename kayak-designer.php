@@ -188,18 +188,43 @@ function kayak_designer_render_ral_palette($id, $name, $default_color) {
     echo '</div>'; // .ral-palette-container
 }
 
+/**
+ * Scans the models directory to find available kayak models.
+ */
+function get_kayak_models() {
+    $models_path = plugin_dir_path(__FILE__) . 'assets/images/models/';
+    $models = [];
+    if (is_dir($models_path)) {
+        $items = scandir($models_path);
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+            if (is_dir($models_path . $item)) {
+                $models[] = $item;
+            }
+        }
+    }
+    return $models;
+}
+
 function kayak_designer_shortcode_handler($atts) {
-    // Retrieve saved options
-    $options = get_option('kayak_designer_options');
+    // Get available models
+    $models = get_kayak_models();
+    $default_model = 'default';
+    if (!in_array($default_model, $models) && !empty($models)) {
+        $default_model = $models[0];
+    }
+    $models_base_url = plugin_dir_url(__FILE__) . 'assets/images/models/';
 
     // Start output buffering
     ob_start();
     ?>
     <div id="kayak-designer-container">
         <div id="kayak-preview-area">
-            <div id="kayak-top-view-container">
-                                <img id="kayak-top-view-img" class="kayak-outline-image" src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'assets/images/placeholder_top.png'); ?>" alt="Kayak Top View">
-                <!-- Color layers will be placed here -->
+            <div id="kayak-top-view-container" data-model="<?php echo esc_attr($default_model); ?>">
+                <img id="kayak-top-view-img" class="kayak-outline-image" src="<?php echo esc_url($models_base_url . $default_model . '/top_view_outline.png'); ?>" alt="Kayak Top View">
+                <!-- Color layers -->
                 <div id="kayak-top-view-deck-color" class="color-layer"></div>
                 <div id="kayak-top-view-lines-color" class="color-layer"></div>
                 <div id="kayak-top-view-accent-front-color" class="color-layer"></div>
@@ -207,13 +232,12 @@ function kayak_designer_shortcode_handler($atts) {
                 <div id="kayak-top-view-cockpit-rim-color" class="color-layer"></div>
                 <div id="kayak-top-view-seat-color" class="color-layer"></div>
                 <div id="kayak-top-view-logo-color" class="color-layer logo-layer"></div>
-                <img id="kayak-top-view-hardware" class="hardware-layer" src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'assets/images/hardware/top_view_hardware.png'); ?>" alt="Kayak Top Hardware">
-                <!-- Overlays for patterns and logos will go on top of color layers -->
+                <img id="kayak-top-view-hardware" class="hardware-layer" src="<?php echo esc_url($models_base_url . $default_model . '/top_view_hardware.png'); ?>" alt="Kayak Top Hardware">
                 <div class="view-controls"><span class="zoom-icon" data-view="top">&#x26F6;</span></div>
             </div>
-            <div id="kayak-side-view-container">
-                                <img id="kayak-side-view-img" class="kayak-outline-image" src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'assets/images/placeholder_side.png'); ?>" alt="Kayak Side View">
-                <!-- Color layers will be placed here -->
+            <div id="kayak-side-view-container" data-model="<?php echo esc_attr($default_model); ?>">
+                <img id="kayak-side-view-img" class="kayak-outline-image" src="<?php echo esc_url($models_base_url . $default_model . '/side_view_outline.png'); ?>" alt="Kayak Side View">
+                <!-- Color layers -->
                 <div id="kayak-side-view-hull-color" class="color-layer"></div>
                 <div id="kayak-side-view-deck-color" class="color-layer"></div>
                 <div id="kayak-side-view-deck-seam-tape-color" class="color-layer"></div>
@@ -222,8 +246,7 @@ function kayak_designer_shortcode_handler($atts) {
                 <div id="kayak-side-view-accent-front-color" class="color-layer"></div>
                 <div id="kayak-side-view-accent-rear-color" class="color-layer"></div>
                 <div id="kayak-side-view-logo-color" class="color-layer logo-layer"></div>
-                <img id="kayak-side-view-hardware" class="hardware-layer" src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'assets/images/hardware/side_view_hardware.png'); ?>" alt="Kayak Side Hardware">
-                <!-- Overlays for patterns and logos will go on top of color layers -->
+                <img id="kayak-side-view-hardware" class="hardware-layer" src="<?php echo esc_url($models_base_url . $default_model . '/side_view_hardware.png'); ?>" alt="Kayak Side Hardware">
                 <div class="view-controls"><span class="zoom-icon" data-view="side">&#x26F6;</span></div>
             </div>
         </div>
@@ -235,11 +258,21 @@ function kayak_designer_shortcode_handler($atts) {
         </div>
 
         <div id="kayak-color-controls">
-            <h3>Choose Colors &amp; Layup</h3>
+            <h3>Choose Model, Colors &amp; Layup</h3>
 
             <div class="controls-grid">
                 <div class="control-section">
-                    <h4>Deck/Hull colors</h4>
+                    <h4>Kayak Model</h4>
+                    <label for="kayak-model-select">Select Model:</label>
+                    <select id="kayak-model-select" name="kayak-model-select">
+                        <?php foreach ($models as $model) : ?>
+                            <option value="<?php echo esc_attr($model); ?>" <?php selected($model, $default_model); ?>>
+                                <?php echo esc_html(ucwords(str_replace(['_', '-'], ' ', $model))); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <h4 style="margin-top: 15px;">Deck/Hull colors</h4>
                     <div class="grid-2-col">
                         <div class="control-group">
                             <label for="deck-color">Deck base:</label>
@@ -363,12 +396,14 @@ function kayak_designer_enqueue_assets() {
             'kayak-designer-js',
             'kayakDesignerData',
             [
-                'apiKey'        => isset($options['api_key']) ? esc_attr($options['api_key']) : '',
-                'pluginBaseUrl' => plugin_dir_url(__FILE__),
-                'ajaxUrl'       => admin_url('admin-ajax.php'),
-                'patternsPath'  => plugin_dir_url(__FILE__) . 'assets/patterns/',
-                'nonce'         => wp_create_nonce('kayak_designer_nonce'),
+                'apiKey'         => isset($options['api_key']) ? esc_attr($options['api_key']) : '',
+                'pluginBaseUrl'  => plugin_dir_url(__FILE__),
+                'ajaxUrl'        => admin_url('admin-ajax.php'),
+                'patternsPath'   => plugin_dir_url(__FILE__) . 'assets/patterns/',
+                'nonce'          => wp_create_nonce('kayak_designer_nonce'),
                 'isUserLoggedIn' => is_user_logged_in(),
+                'modelsList'     => get_kayak_models(),
+                'modelsBaseUrl'  => plugin_dir_url(__FILE__) . 'assets/images/models/'
             ]
         );
     }
