@@ -446,12 +446,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 5. MODAL (FULL-SCREEN VIEW) ---
 
     const initializeModal = () => {
-        const modal = document.getElementById('kayak-designer-modal');
+        // Find or create designer modal
+        let modal = document.getElementById('kayak-designer-modal');
 
         // If the designer modal isn't on the page, do nothing.
         // This is expected on pages that only have the gallery shortcode.
         if (!modal) {
             return;
+        }
+        
+        // Move modal to body to ensure it's not clipped by parent containers
+        if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
         }
 
         const closeButton = modal.querySelector('.kayak-modal-close');
@@ -467,15 +473,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const openModal = (viewContainer) => {
             if (!viewContainer) return;
             const clonedView = viewContainer.cloneNode(true);
+            
+            // Hide the zoom icon in the modal view
+            const zoomIcon = clonedView.querySelector('.zoom-icon');
+            if (zoomIcon) {
+                zoomIcon.style.display = 'none';
+            }
+            
             modalContentWrapper.innerHTML = ''; // Clear previous content
             modalContentWrapper.appendChild(clonedView);
-            modal.style.display = 'block';
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('modal-visible'), 10); // Add class for fade-in
         };
 
         // Function to close the modal
         const closeModal = () => {
-            modal.style.display = 'none';
-            modalContentWrapper.innerHTML = ''; // Clean up
+            modal.classList.remove('modal-visible');
+            // Wait for the transition to finish before hiding the modal
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modalContentWrapper.innerHTML = ''; // Clean up
+            }, 300); // Must match CSS transition duration
         };
 
         // Add listeners to zoom icons
@@ -488,9 +506,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+        
+        // Add click-anywhere functionality on kayak view containers
+        const topViewContainer = document.getElementById('kayak-top-view-container');
+        const sideViewContainer = document.getElementById('kayak-side-view-container');
+        
+        if (topViewContainer) {
+            topViewContainer.addEventListener('click', (e) => {
+                // Don't trigger if the click was on a child control element
+                if (!e.target.closest('.view-controls')) {
+                    openModal(topViewContainer);
+                }
+            });
+        }
+        
+        if (sideViewContainer) {
+            sideViewContainer.addEventListener('click', (e) => {
+                // Don't trigger if the click was on a child control element
+                if (!e.target.closest('.view-controls')) {
+                    openModal(sideViewContainer);
+                }
+            });
+        }
 
         // Add listeners for closing the modal
         closeButton.addEventListener('click', closeModal);
+        
+        // Close modal when clicking on the modal background/wrapper
+        modalContentWrapper.addEventListener('click', (event) => {
+            // Only close if clicking directly on the wrapper, not its children
+            if (event.target === modalContentWrapper) {
+                closeModal();
+            }
+        });
+        
+        // Also keep the window click listener for backward compatibility
         window.addEventListener('click', (event) => {
             if (event.target === modal) {
                 closeModal();
@@ -667,26 +717,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const initializeGalleryModal = () => {
     const gallery = document.querySelector('.kayak-design-gallery');
-    if (!gallery) return; // Exit if no gallery on the page.
+    if (!gallery) return;
 
-    // 1. Create and inject the modal HTML if it doesn't already exist.
-    if (!document.getElementById('kayak-gallery-modal')) {
+    // 1. Find or create the modal
+    let galleryModal = document.getElementById('kayak-gallery-modal');
+    
+    // Move the modal to the end of body to prevent clipping by parent containers
+    if (galleryModal && galleryModal.parentElement !== document.body) {
+        document.body.appendChild(galleryModal);
+    }
+    
+    // If modal doesn't exist, create it
+    if (!galleryModal) {
         const modalHTML = `
             <div id="kayak-gallery-modal" class="kayak-modal">
                 <div class="kayak-modal-content-wrapper">
                     <span class="kayak-modal-close">&times;</span>
-                    <figure>
-                        <img id="kayak-gallery-modal-image" class="kayak-modal-content" src="" alt="Full-size design">
-                        <figcaption id="kayak-gallery-modal-title"></figcaption>
-                    </figure>
+                    <h3 id="kayak-gallery-modal-title"></h3>
+                    <img class="kayak-modal-content" id="kayak-gallery-modal-image" src="" alt="Full-size design preview">
                 </div>
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
+        galleryModal = document.getElementById('kayak-gallery-modal');
     }
-
-    // 2. Get modal elements
-    const galleryModal = document.getElementById('kayak-gallery-modal');
     const modalImage = document.getElementById('kayak-gallery-modal-image');
     const modalTitle = document.getElementById('kayak-gallery-modal-title');
     const closeButton = galleryModal.querySelector('.kayak-modal-close');
@@ -726,11 +780,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 5. Add event listeners
     gallery.addEventListener('click', (e) => {
-        const previewLink = e.target.closest('.gallery-item-preview');
-        if (previewLink && previewLink.dataset.modalImage) {
+        // Check if the clicked element is a zoom icon
+        if (e.target.classList.contains('zoom-icon')) {
             e.preventDefault();
-            const imageSrc = previewLink.dataset.modalImage;
-            const title = previewLink.dataset.modalTitle;
+            const imageSrc = e.target.dataset.modalImage;
+            const title = e.target.dataset.modalTitle;
+            openModal(imageSrc, title);
+            return;
+        }
+        
+        // Handle clicks on the preview image (for backward compatibility)
+        const previewLink = e.target.closest('.gallery-item-preview');
+        if (previewLink && previewLink.dataset.highResImage) {
+            e.preventDefault();
+            const imageSrc = previewLink.dataset.highResImage;
+            const title = previewLink.querySelector('.zoom-icon')?.dataset.modalTitle || '';
             openModal(imageSrc, title);
         }
     });

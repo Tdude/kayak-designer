@@ -60,8 +60,9 @@ function kayak_designer_gallery_shortcode_handler($atts) {
         
         if (!empty($design->preview_image)) {
             // Make the image clickable and add data attributes for the modal
-            $output .= '<div class="gallery-item-image-wrapper" data-modal-image="' . esc_attr($design->preview_image) . '" data-modal-title="' . esc_attr($design->design_name) . '">';
-            $output .= '<img src="' . esc_attr($design->preview_image) . '" alt="' . esc_attr($design->design_name) . '" class="gallery-item-preview">';
+            $output .= '<div class="gallery-item-preview" data-high-res-image="' . esc_attr($design->preview_image) . '">';
+            $output .= '<img src="' . esc_attr($design->preview_image) . '" alt="' . esc_attr($design->design_name) . '">';
+            $output .= '<span class="zoom-icon" data-modal-image="' . esc_attr($design->preview_image) . '" data-modal-title="' . esc_attr($design->design_name) . '">&#x26F6;</span>';
             $output .= '</div>';
         } else {
             $output .= '<div class="kayak-preview-placeholder">[No Preview]</div>';

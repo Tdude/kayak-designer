@@ -213,7 +213,7 @@ function kayak_designer_shortcode_handler($atts) {
         </div>
 
         <!-- Modal for Full-screen View -->
-        <div id="kayak-designer-modal" class="kayak-modal">
+        <div id="kayak-designer-modal" class="kayak-modal" style="display:none;">
             <span class="kayak-modal-close">&times;</span>
             <div class="kayak-modal-content-wrapper"></div>
         </div>
