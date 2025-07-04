@@ -28,26 +28,12 @@ const modulePath = pluginUrl ?
 import(modulePath)
     .then(module => {
         window.kayakDesignerCore = module;
-        console.log('Core module loaded successfully');
     })
     .catch(err => {
         console.error('Failed to load core module:', err);
     });
 
-console.log('Kayak Designer module loaded');
-
-// Add a helper function to debug DOM elements
-window.debugKayakElements = function() {
-    console.log('--- KAYAK DESIGNER DEBUG ---');
-    console.log('Designer container:', document.querySelector('#kayak-designer-container'));
-    console.log('Color inputs:', document.querySelectorAll('.color-input'));
-    console.log('Hull finish select:', document.getElementById('hull-finish'));
-    console.log('Model select:', document.getElementById('kayak-model-select'));
-    console.log('-------------------------');
-};
-
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMContentLoaded fired for Kayak Designer');
     
     // Create a default kayakDesignerData if it doesn't exist
     if (typeof window.kayakDesignerData === 'undefined') {
@@ -67,31 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
         ...window.kayakDesignerData
     };
     
-    console.log('Using kayakDesignerData:', window.kayakDesignerData);
-    
     // Wait for the core module to be loaded before initializing
     if (window.kayakDesignerCore) {
         // If already loaded, initialize directly
         window.kayakDesignerCore.initialize(window.kayakDesignerData);
-        
-        // Debug DOM elements after a short delay
-        setTimeout(() => {
-            window.debugKayakElements();
-        }, 500);
     } else {
         // Set up an interval to check when the module is loaded
         const initializationCheck = setInterval(() => {
             if (window.kayakDesignerCore) {
                 clearInterval(initializationCheck);
                 window.kayakDesignerCore.initialize(window.kayakDesignerData);
-                
-                // Debug DOM elements after a short delay
-                setTimeout(() => {
-                    window.debugKayakElements();
-                }, 500);
             }
         }, 50);
-        
+
         // Safety timeout after 5 seconds
         setTimeout(() => {
             if (!window.kayakDesignerCore) {
