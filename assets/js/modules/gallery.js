@@ -15,6 +15,9 @@ export const initGallery = (config) => {
     ajaxUrl = config.ajaxUrl;
     nonce = config.nonce;
     isUserLoggedIn = config.isUserLoggedIn === 'true';
+    
+    // Initialize gallery filtering
+    initGalleryFiltering();
 };
 
 /**
@@ -24,18 +27,18 @@ export const initGallery = (config) => {
 export const handleVoteClick = (e) => {
     // Only process if the click was on a vote button
     const voteButton = e.target.closest('.vote-button');
-    console.log('Vote click detected, target:', e.target);
-    console.log('Vote button found:', voteButton);
+    // Process vote button click
+
     if (!voteButton) return;
     
     // Prevent default behavior (like form submission)
     e.preventDefault();
 
     const galleryItem = voteButton.closest('.gallery-item');
-    console.log('Gallery item found:', galleryItem);
+
     
     if (!galleryItem) {
-        console.error('Could not find parent gallery item for vote button');
+        // Could not find parent gallery item for vote button
         return;
     }
 
@@ -44,12 +47,12 @@ export const handleVoteClick = (e) => {
     const buttonNonce = voteButton.getAttribute('data-nonce');
     
     if (!designId) {
-        console.error('Missing design ID on gallery item');
+        // Missing design ID on gallery item
         return;
     }
     
     if (!buttonNonce) {
-        console.error('Missing nonce on vote button');
+        // Missing nonce on vote button
         return;
     }
 
@@ -67,7 +70,7 @@ export const handleVoteClick = (e) => {
         voteAction = 'add_vote'; // User is adding a vote
     }
 
-    console.log('Sending vote: Design ID:', designId, 'Vote Action:', voteAction);
+    // Sending vote request
     
     // Send the vote to the server - note the action name must match PHP handler
     const formData = new FormData();
@@ -76,12 +79,7 @@ export const handleVoteClick = (e) => {
     formData.append('design_id', designId);
     formData.append('vote_action', voteAction);
     
-    console.log('Vote data being sent:', {
-        action: 'kayak_designer_handle_vote',
-        nonce,
-        design_id: designId,
-        vote_action: voteAction
-    });
+
 
     fetch(ajaxUrl, {
         method: 'POST',
@@ -95,7 +93,7 @@ export const handleVoteClick = (e) => {
             if (voteCount) {
                 // PHP returns new_vote_count, not vote_count
                 voteCount.textContent = result.data?.new_vote_count || voteCount.textContent;
-                console.log('Updated vote count to:', result.data?.new_vote_count);
+
             }
 
             // Toggle the active state of the button
@@ -131,12 +129,10 @@ export const handleVoteClick = (e) => {
                 errorMessage = 'Could not process your vote. Please try again later.';
             }
             
-            console.log('Vote error details:', result);
             alert(errorMessage);
         }
     })
     .catch(error => {
-        console.error('Error processing vote:', error);
         alert('An error occurred while processing your vote.');
     });
 };
@@ -144,11 +140,103 @@ export const handleVoteClick = (e) => {
 /**
  * Show a confirmation alert for vote actions
  */
-export const showVoteConfirmationAlert = () => {
-    const message = localStorage.getItem('kayak_vote_confirmation');
-    if (message) {
-        // Display the alert, then remove from storage
-        alert(message);
-        localStorage.removeItem('kayak_vote_confirmation');
-    }
+export const showVoteConfirmationAlert = (message) => {
+    // Create a stylized alert message
+    const alertElement = document.createElement('div');
+    alertElement.className = 'kayak-alert kayak-alert-success';
+    alertElement.textContent = message;
+    
+    // Add to page
+    document.body.appendChild(alertElement);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        alertElement.remove();
+    }, 3000);
+};
+
+/**
+ * Initialize gallery filtering with AJAX
+ */
+const initGalleryFiltering = () => {
+    const sortSelect = document.getElementById('gallery-sort-select');
+    if (!sortSelect) return; // Not on a gallery page
+    
+    const galleryContainer = document.querySelector('.kayak-design-gallery');
+    if (!galleryContainer) return; // Gallery container not found
+    
+    const loadingIndicator = document.getElementById('gallery-loading-indicator');
+    
+    // Add change event listener to the dropdown
+    sortSelect.addEventListener('change', (e) => {
+        const orderby = e.target.value;
+        const selectNonce = sortSelect.getAttribute('data-nonce');
+        
+        if (!selectNonce) {
+            // Missing nonce for gallery filtering
+            return;
+        }
+        
+        // Show loading indicator
+        if (loadingIndicator) loadingIndicator.style.display = 'inline-block';
+        
+        // Make AJAX request to filter gallery
+        const formData = new FormData();
+        formData.append('action', 'kayak_designer_gallery_filter');
+        formData.append('nonce', selectNonce);
+        formData.append('orderby', orderby);
+        
+        fetch(ajaxUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success && result.data.html) {
+                // Update gallery content
+                galleryContainer.innerHTML = result.data.html;
+                
+                // Re-initialize click events for gallery items
+                attachGalleryItemEvents();
+            } else {
+                // Error filtering gallery
+            }
+            
+            // Hide loading indicator
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+        })
+        .catch(error => {
+            // Error during gallery filtering
+            // Hide loading indicator
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+        });
+    });
+};
+
+/**
+ * Attach click events to gallery items after AJAX refresh
+ */
+const attachGalleryItemEvents = () => {
+    // Re-initialize modal triggers
+    const zoomIcons = document.querySelectorAll('.zoom-icon');
+    zoomIcons.forEach(icon => {
+        icon.addEventListener('click', (e) => {
+            const image = e.target.getAttribute('data-modal-image');
+            const title = e.target.getAttribute('data-modal-title');
+            const modalImage = document.getElementById('kayak-gallery-modal-image');
+            const modalTitle = document.getElementById('kayak-gallery-modal-title');
+            
+            if (modalImage) {
+                modalImage.src = image;
+                if (modalTitle) modalTitle.textContent = title;
+                galleryModal.style.display = 'flex';
+            }
+        });
+    });
+    
+    // Re-initialize vote buttons
+    const voteButtons = document.querySelectorAll('.vote-button');
+    voteButtons.forEach(button => {
+        button.addEventListener('click', handleVoteClick);
+    });
 };
