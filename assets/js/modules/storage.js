@@ -159,12 +159,122 @@ export const saveDesign = async (updateKayakPartColor, handleHullAppearanceChang
  * @returns {Promise<void>}
  */
 export const loadDesigns = async (updateKayakPartColor, handleHullAppearanceChange) => {
+    // Get references to the container and select element
+    const designsContainer = document.getElementById('saved-designs-container');
     const select = document.getElementById('saved-designs-select');
-    if (!select) return;
+    if (!select || !designsContainer) return;
     
+    // Clear the container
+    designsContainer.innerHTML = '';
+    
+    // Create UI elements
+    const selectLabel = document.createElement('label');
+    selectLabel.setAttribute('for', 'saved-designs-select');
+    selectLabel.textContent = 'Select a design:';
+    
+    // Create a new select element with proper styling
+    const newSelect = document.createElement('select');
+    newSelect.id = 'saved-designs-select';
+    newSelect.className = 'design-select';
+    
+    // Create a dropdown container div
+    const selectContainer = document.createElement('div');
+    selectContainer.className = 'select-container';
+    selectContainer.appendChild(selectLabel);
+    selectContainer.appendChild(newSelect);
+    
+    // Create buttons container
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'design-action-buttons';
+    
+    // Create load button
+    const loadButton = document.createElement('button');
+    loadButton.id = 'load-design-button';
+    loadButton.className = 'button load-design-button';
+    loadButton.textContent = 'Load Design';
+    loadButton.type = 'button';
+    loadButton.setAttribute('disabled', 'disabled');
+    loadButton.addEventListener('click', () => {
+        const designId = newSelect.value;
+        if (designId) {
+            handleLoadDesign(designId, updateKayakPartColor, handleHullAppearanceChange);
+        }
+    });
+    
+    // Create delete button
+    const deleteButton = document.createElement('button');
+    deleteButton.id = 'delete-design-button';
+    deleteButton.className = 'button delete-design-button';
+    deleteButton.textContent = 'Delete Design';
+    deleteButton.type = 'button';
+    deleteButton.setAttribute('disabled', 'disabled');
+    // Event listener will be added later to prevent duplicates
+    
+    // Add elements to buttons container
+    buttonsContainer.appendChild(loadButton);
+    buttonsContainer.appendChild(deleteButton);
+    
+    // Enable/disable buttons based on selection
+    newSelect.addEventListener('change', () => {
+        const hasSelection = newSelect.value !== '';
+        loadButton.disabled = !hasSelection;
+        deleteButton.disabled = !hasSelection;
+    });
+    
+    // Add elements to the container
+    designsContainer.appendChild(selectContainer);
+    designsContainer.appendChild(buttonsContainer);
+    
+    // Add default option to select
     const placeholder = isUserLoggedIn ? 'Select a design from your account...' : 'Select a design from your browser...';
-    select.innerHTML = `<option value="">${placeholder}</option>`;
-
+    newSelect.innerHTML = `<option value="">${placeholder}</option>`;
+    
+    // Remove any existing event listeners by recreating the buttons
+    const newLoadButton = document.createElement('button');
+    newLoadButton.id = 'load-design-button';
+    newLoadButton.className = 'button load-design-button';
+    newLoadButton.textContent = 'Load Design';
+    newLoadButton.type = 'button';
+    newLoadButton.disabled = true;
+    
+    const newDeleteButton = document.createElement('button');
+    newDeleteButton.id = 'delete-design-button';
+    newDeleteButton.className = 'button delete-design-button';
+    newDeleteButton.textContent = 'Delete Design';
+    newDeleteButton.type = 'button';
+    newDeleteButton.disabled = true;
+    
+    // Replace the old buttons with new ones
+    buttonsContainer.innerHTML = '';
+    buttonsContainer.appendChild(newLoadButton);
+    buttonsContainer.appendChild(newDeleteButton);
+    
+    // Add event listeners to buttons (only once)
+    newLoadButton.addEventListener('click', () => {
+        const designId = newSelect.value;
+        if (designId) {
+            console.log('Load button clicked for design:', designId);
+            handleLoadDesign(designId, updateKayakPartColor, handleHullAppearanceChange);
+        }
+    });
+    
+    newDeleteButton.addEventListener('click', () => {
+        const designId = newSelect.value;
+        if (designId) {
+            console.log('Delete button clicked for design:', designId);
+            handleDeleteDesign(designId, updateKayakPartColor, handleHullAppearanceChange);
+        }
+    });
+    
+    // Add event listener to the dropdown to enable/disable buttons
+    newSelect.addEventListener('change', (event) => {
+        console.log('Dropdown selection changed:', event.target.value);
+        const hasSelection = event.target.value !== '';
+        newLoadButton.disabled = !hasSelection;
+        newDeleteButton.disabled = !hasSelection;
+    });
+    
+    // Handle loading designs based on user login status
     if (isUserLoggedIn) {
         // Logged-in user: Load from database
         try {
@@ -196,23 +306,86 @@ export const loadDesigns = async (updateKayakPartColor, handleHullAppearanceChan
             if (result.success) {
                 if (result.data.length === 0) {
                     console.log('No designs found in the database for the current user.');
+                } else {
+                    // Add each design as an option to the dropdown
+                    result.data.forEach(design => {
+                        const option = document.createElement('option');
+                        option.value = design.id;
+                        option.textContent = design.name;
+                        newSelect.appendChild(option);
+                    });
                 }
-                result.data.forEach(design => {
-                    select.add(new Option(design.name, design.id));
-                });
             } else {
                 console.error('Failed to load designs:', result.data);
+                designsList.appendChild(placeholderMessage);
             }
         } catch (error) {
             console.error('Error fetching designs:', error);
         }
     } else {
         // Guest user: Load from local storage
-        const designs = getLocalStorageItem(LOCAL_STORAGE_KEY);
-        Object.keys(designs).forEach(name => {
-            select.add(new Option(name, name));
-        });
+        const savedDesigns = JSON.parse(localStorage.getItem('kayakDesigns')) || [];
+        
+        if (savedDesigns.length === 0) {
+            console.log('No designs found in localStorage.');
+        } else {
+            // Add each design as an option to the dropdown
+            savedDesigns.forEach(design => {
+                const option = document.createElement('option');
+                option.value = design.id;
+                option.textContent = design.name;
+                newSelect.appendChild(option);
+            });
+        }
     }
+    
+    // We've already added the event listeners above, no need to add them again
+};
+
+/**
+ * Create a design list item with edit and delete buttons
+ * @param {string} id - Design ID or name
+ * @param {string} name - Design name
+ * @param {Function} updateKayakPartColor - Function to update kayak colors
+ * @param {Function} handleHullAppearanceChange - Function to update hull appearance
+ * @returns {HTMLElement} - The design list item element
+ */
+const createDesignListItem = (id, name, updateKayakPartColor, handleHullAppearanceChange) => {
+    // Create the container
+    const item = document.createElement('div');
+    item.className = 'design-list-item';
+    item.dataset.id = id;
+    
+    // Create the design name
+    const designName = document.createElement('span');
+    designName.className = 'design-name';
+    designName.textContent = name;
+    
+    // Create the buttons container
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'design-actions';
+    
+    // Create the edit button
+    const loadButton = document.createElement('button');
+    loadButton.className = 'button load-design-button';
+    loadButton.textContent = 'Load';
+    loadButton.type = 'button';
+    loadButton.addEventListener('click', () => handleLoadDesign(id, updateKayakPartColor, handleHullAppearanceChange));
+    
+    // Create the delete button
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'button delete-design-button';
+    deleteButton.textContent = 'Delete';
+    deleteButton.type = 'button';
+    deleteButton.addEventListener('click', () => handleDeleteDesign(id, updateKayakPartColor, handleHullAppearanceChange));
+    
+    // Assemble the item
+    buttonsContainer.appendChild(loadButton);
+    buttonsContainer.appendChild(deleteButton);
+    item.appendChild(designName);
+    item.appendChild(buttonsContainer);
+    
+    return item;
 };
 
 /**
@@ -222,6 +395,20 @@ export const loadDesigns = async (updateKayakPartColor, handleHullAppearanceChan
  */
 export const handleDesignLoad = async (e, updateKayakPartColor, handleHullAppearanceChange) => {
     const designId = e.target.value;
+    if (!designId) return;
+    
+    // Call the implementation function
+    return handleLoadDesign(designId, updateKayakPartColor, handleHullAppearanceChange);
+};
+
+/**
+ * Handle loading a design (from button click)
+ * @param {string} designId - ID of the design to load
+ * @param {Function} updateKayakPartColor - Function to update kayak part colors
+ * @param {Function} handleHullAppearanceChange - Function to update hull appearance
+ * @returns {Promise<void>}
+ */
+export const handleLoadDesign = async (designId, updateKayakPartColor, handleHullAppearanceChange) => {
     if (!designId) return;
 
     if (isUserLoggedIn) {
@@ -339,6 +526,87 @@ export const handleDesignLoad = async (e, updateKayakPartColor, handleHullAppear
         } catch (error) {
             console.error('Error loading design from local storage:', error);
             alert('An error occurred while loading the design from your browser.');
+        }
+    }
+};
+
+/**
+ * Handle deleting a design
+ * @param {string} designId - ID of the design to delete
+ * @param {Function} updateKayakPartColor - Function to update kayak colors
+ * @param {Function} handleHullAppearanceChange - Function to update hull appearance
+ * @returns {Promise<void>}
+ */
+export const handleDeleteDesign = async (designId, updateKayakPartColor, handleHullAppearanceChange) => {
+    if (!designId) return;
+    
+    console.log('Starting delete process for design:', designId);
+    
+    // Confirm deletion with the user
+    if (!confirm('Are you sure you want to delete this design? This action cannot be undone.')) {
+        console.log('User cancelled deletion');
+        return;
+    }
+    
+    console.log('User confirmed deletion, proceeding...');
+    
+    if (isUserLoggedIn) {
+        // Logged-in user: Delete from server
+        try {
+            console.log('Deleting design with AJAX:', designId);
+            
+            const formData = new FormData();
+            formData.append('action', 'delete_kayak_design');
+            formData.append('nonce', nonce);
+            formData.append('design_id', designId);
+            
+            const response = await fetch(ajaxUrl, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('AJAX response for delete_kayak_design:', result);
+            
+            if (result.success) {
+                console.log('Design deleted successfully, refreshing list...');
+                // Just update the dropdown options instead of removing the entire dropdown
+                // This preserves the dropdown's existence in the DOM
+                setTimeout(() => {
+                    loadDesigns(updateKayakPartColor, handleHullAppearanceChange);
+                }, 50);
+            } else {
+                console.error('Failed to delete design:', result.data);
+                // Keep only this alert as it's an error case
+                alert(`Could not delete design: ${result.data}`);
+            }
+        } catch (error) {
+            console.error('Error deleting design:', error);
+            // Keep only this alert as it's an error case
+            alert(`An error occurred while deleting the design: ${error.message}`);
+        }
+    } else {
+        // Guest user: Delete from local storage
+        try {
+            console.log('Deleting design from local storage:', designId);
+            const savedDesigns = JSON.parse(localStorage.getItem('kayakDesigns')) || [];
+            const updatedDesigns = savedDesigns.filter(design => design.id !== designId);
+            localStorage.setItem('kayakDesigns', JSON.stringify(updatedDesigns));
+            
+            console.log('Design deleted from local storage, refreshing list...');
+            // Just update the dropdown options instead of removing the entire dropdown
+            // This preserves the dropdown's existence in the DOM
+            setTimeout(() => {
+                loadDesigns(updateKayakPartColor, handleHullAppearanceChange);
+            }, 50);
+        } catch (error) {
+            console.error('Error deleting design from local storage:', error);
+            // Keep only this alert as it's an error case
+            alert('Could not delete the design. Your browser storage might be locked or disabled.');
         }
     }
 };

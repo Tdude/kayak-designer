@@ -288,10 +288,12 @@ function kayak_designer_shortcode_handler($atts) {
 
                 <div class="control-section">
                     <h4>Manage &amp; Save</h4>
-                    <label for="saved-designs-select">Load Design:</label>
-                    <select id="saved-designs-select" name="saved-designs-select" style="margin-bottom: 15px;">
-                        <option value="">Select a Design...</option>
-                    </select>
+                    <div id="saved-designs-container">
+                        <label for="saved-designs-select">Load Design:</label>
+                        <select id="saved-designs-select" name="saved-designs-select" style="margin-bottom: 15px;">
+                            <option value="">Select a Design...</option>
+                        </select>
+                    </div>
                     <label for="design-name">Design Name:</label>
                     <input type="text" id="design-name" name="design-name" placeholder="e.g., My Awesome Kayak">
                     <button id="save-design-button" class="button" style="margin: 1em 0; width: 100%;">Save Design</button>
@@ -569,6 +571,58 @@ function kayak_designer_load_design() {
     }
 }
 add_action('wp_ajax_load_kayak_design', 'kayak_designer_load_design');
+
+/**
+ * Delete a specific design.
+ */
+function kayak_designer_delete_design() {
+    if (!is_user_logged_in() || !check_ajax_referer('kayak_designer_nonce', 'nonce', false)) {
+        wp_send_json_error('Authentication failed.');
+        return;
+    }
+
+    global $wpdb;
+    $user_id = get_current_user_id();
+    $design_id = isset($_POST['design_id']) ? absint($_POST['design_id']) : 0;
+
+    if (!$design_id) {
+        wp_send_json_error('No design ID specified.');
+        return;
+    }
+
+    $table_name = $wpdb->prefix . 'kayak_designs';
+
+    // First check if the design belongs to the current user
+    $design_exists = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT id FROM $table_name WHERE id = %d AND user_id = %d",
+            $design_id,
+            $user_id
+        )
+    );
+
+    if (!$design_exists) {
+        wp_send_json_error('Design not found or you do not have permission to delete it.');
+        return;
+    }
+
+    // Delete the design
+    $result = $wpdb->delete(
+        $table_name,
+        [
+            'id' => $design_id,
+            'user_id' => $user_id // Extra safety to ensure only the owner can delete
+        ],
+        ['%d', '%d']
+    );
+
+    if ($result) {
+        wp_send_json_success('Design deleted successfully.');
+    } else {
+        wp_send_json_error('Could not delete the design. DB Error: ' . $wpdb->last_error);
+    }
+}
+add_action('wp_ajax_delete_kayak_design', 'kayak_designer_delete_design');
 
 // Include gallery functions
 require_once plugin_dir_path(__FILE__) . 'gallery-functions.php';

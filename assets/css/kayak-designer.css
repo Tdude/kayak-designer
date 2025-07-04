@@ -228,6 +228,66 @@
     margin-top: 0;
 }
 
+/* --------------------------------------------------------------------
+   8. Manage Saved Designs
+-------------------------------------------------------------------- */
+#saved-designs-container {
+    margin-bottom: 20px;
+}
+
+.select-container {
+    margin-bottom: 15px;
+}
+
+.design-select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.design-action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.design-action-buttons .button {
+    flex: 1;
+    padding: 8px 10px;
+    text-align: center;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+}
+
+.load-design-button {
+    background-color: #2271b1;
+    color: white;
+}
+
+.delete-design-button {
+    background-color: #d63638 !important;
+    color: white;
+}
+
+.load-design-button:hover {
+    background-color: #135e96;
+}
+
+.delete-design-button:hover {
+    background-color: #b32d2e !important;
+}
+
+.load-design-button:disabled,
+.delete-design-button:disabled {
+    background-color: #a7a7a7;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
 #kayak-color-controls label {
     display: block;
     margin-bottom: 5px;
@@ -289,6 +349,7 @@
 }
 
 .gallery-item-preview {
+    position: relative;
     width: 100%;
     height: auto;
     margin-bottom: 15px;
@@ -302,9 +363,6 @@
     opacity: 0.8;
 }
 
-.gallery-item-preview {
-    position: relative;
-}
 
 .gallery-item-preview .zoom-icon {
     position: absolute;
@@ -317,6 +375,12 @@
 
 .gallery-item-preview:hover .zoom-icon {
     opacity: 1;
+}
+
+.gallery-item-preview img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
 }
 
 .kayak-preview-placeholder {
