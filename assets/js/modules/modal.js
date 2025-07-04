@@ -119,32 +119,26 @@ export const initializeModal = () => {
 
     // Add event listeners to zoom icons
     const zoomIcons = document.querySelectorAll('.zoom-icon');
-    console.log('Found zoom icons:', zoomIcons.length);
     zoomIcons.forEach(icon => {
-        console.log('Adding click event to zoom icon:', icon);
         icon.addEventListener('click', openModal);
     });
 
     // Add click handlers to kayak images to open modal
     const kayakImages = document.querySelectorAll('#kayak-top-view-img, #kayak-side-view-img');
-    console.log('Found kayak images for modal click:', kayakImages.length);
     kayakImages.forEach(img => {
         img.addEventListener('click', (e) => {
-            console.log('Kayak image clicked, opening modal');
             openModal();
         });
     });
 
     // Also add click handlers to the container divs
     const kayakContainers = document.querySelectorAll('.kayak-top-view, .kayak-side-view');
-    console.log('Found kayak containers for modal click:', kayakContainers.length);
     kayakContainers.forEach(container => {
         container.addEventListener('click', (e) => {
             // Only open modal if clicking on the container itself, not controls or zoom icon
             if (!e.target.closest('.view-controls') && 
                 !e.target.closest('.zoom-icon') &&
                 e.target === container) {
-                console.log('Kayak container clicked, opening modal');
                 openModal();
             }
         });
@@ -152,24 +146,16 @@ export const initializeModal = () => {
     
     // Add event listener to close modal when clicking outside content
     modal.addEventListener('click', (e) => {
-        // Log what was clicked to help debug
-        console.log('Modal clicked, target:', e.target, 'current target:', e.currentTarget);
-        
-        // Close if clicking on the modal background (not on any of its content children)
         // Check if the click is directly on the modal itself or if the click is not inside the content wrapper
         if (e.target === modal || (!e.target.closest('.modal-image-container') && 
                                   !e.target.closest('.kayak-modal-close'))) {
-            console.log('Modal background clicked, closing modal');
             closeModal();
         }
     });
 
     // Close button event listener
     if (closeButton) {
-        console.log('Adding click event to close button');
         closeButton.addEventListener('click', closeModal);
-    } else {
-        console.error('Close button not found in modal');
     }
 
     /**
@@ -219,9 +205,7 @@ export const initializeModal = () => {
             // Update button text/icon
             updateToggleButton(toggleBtn, !newIsDarkMode);
             
-            console.log('Theme toggled to:', newIsDarkMode ? 'light mode' : 'dark mode');
-            
-            // Return false to prevent any other handlers
+            // Prevent other handlers
             return false;
         });
         
@@ -262,7 +246,6 @@ export const initializeGalleryModal = () => {
 
     // Functions to open and close modal
     const openModal = (imageSrc, imageTitle) => {
-        console.log('Opening gallery modal');
         if (modalImage) modalImage.src = imageSrc;
         if (modalTitle) modalTitle.textContent = imageTitle || '';
         
@@ -281,7 +264,6 @@ export const initializeGalleryModal = () => {
     };
 
     const closeModal = () => {
-        console.log('Closing gallery modal');
         // First remove the visible class to trigger opacity transition
         galleryModal.classList.remove('modal-visible');
         // Then hide after transition completes
@@ -342,8 +324,6 @@ export const initializeGalleryModal = () => {
             // Update button text/icon
             updateGalleryToggleButton(toggleBtn, !newIsDarkMode);
             
-            console.log('Gallery theme toggled to:', newIsDarkMode ? 'light mode' : 'dark mode');
-            
             // Return false to prevent any other handlers
             return false;
         });
@@ -365,35 +345,25 @@ export const initializeGalleryModal = () => {
 
     // Add click handlers to gallery item images and zoom icons
     const galleryItems = document.querySelectorAll('.gallery-item');
-    console.log('Found gallery items for modal:', galleryItems.length);
     
     galleryItems.forEach(item => {
         const img = item.querySelector('img');
         const zoomIcon = item.querySelector('.zoom-icon');
         const title = item.querySelector('h3')?.textContent || 'Kayak Design';
         
-        console.log('Gallery item:', item);
-        console.log('Gallery item img:', img);
-        console.log('Gallery item zoom icon:', zoomIcon);
-        console.log('Gallery item title:', title);
-        
         // Handle clicks on both the image and zoom icon
         if (img) {
-            console.log('Adding click handler to gallery image');
             img.addEventListener('click', () => {
-                console.log('Gallery image clicked');
                 openModal(img.src, title);
             });
         }
         
         if (zoomIcon) {
-            console.log('Adding click handler to gallery zoom icon');
             // Use data attributes if available, otherwise use the image source
             const modalImage = zoomIcon.getAttribute('data-modal-image') || (img ? img.src : '');
             const modalTitle = zoomIcon.getAttribute('data-modal-title') || title;
             
             zoomIcon.addEventListener('click', (e) => {
-                console.log('Gallery zoom icon clicked');
                 e.stopPropagation();
                 openModal(modalImage, modalTitle);
             });
@@ -402,22 +372,14 @@ export const initializeGalleryModal = () => {
 
     // Close button event listener
     if (closeButton) {
-        console.log('Adding click event to gallery close button');
         closeButton.addEventListener('click', closeModal);
-    } else {
-        console.error('Close button not found in gallery modal');
     }
 
     // Add event listener to close modal when clicking outside content
     galleryModal.addEventListener('click', (e) => {
-        // Log what was clicked to help debug
-        console.log('Gallery modal clicked, target:', e.target, 'current target:', e.currentTarget);
-        
-        // Close if clicking on the modal background (not on any of its content children)
         // This matches the designer modal behavior exactly
         if (e.target === galleryModal || (!e.target.closest('.kayak-modal-content') && 
                                        !e.target.closest('.kayak-modal-close'))) {
-            console.log('Gallery modal background clicked, closing modal');
             closeModal();
         }
     });

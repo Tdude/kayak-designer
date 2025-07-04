@@ -53,12 +53,13 @@ export const renderViewToCanvas = async (viewContainerId) => {
             hullLayers.push(layer);
         }
     }
-    
+    /*
     console.log('Layer categorization:', {
         hullLayers: hullLayers.map(l => l.id || 'unknown'),
         accentLayers: accentLayers.map(l => l.id || 'unknown'), 
         lineLayers: lineLayers.map(l => l.id || 'unknown')
     });
+    */
     
     // Function to draw a layer
     const drawLayer = async (layer) => {
@@ -68,7 +69,6 @@ export const renderViewToCanvas = async (viewContainerId) => {
         const bgImage = getUrlFromCss(style.backgroundImage);
 
         if (maskUrl && (bgColor !== 'rgba(0, 0, 0, 0)' || bgImage)) {
-            console.log('Drawing layer:', layer.id || 'unknown');
             const mask = await loadImage(maskUrl);
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
@@ -111,7 +111,6 @@ export const renderViewToCanvas = async (viewContainerId) => {
     
     // 4. Hardware layer at the very top
     if (hardwareLayerEl && hardwareLayerEl.src) {
-        console.log('Drawing hardware layer');
         const hardwareImage = await loadImage(hardwareLayerEl.src);
         ctx.drawImage(hardwareImage, 0, 0);
     }

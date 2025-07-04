@@ -21,12 +21,13 @@ export const initStorage = (config) => {
     nonce = config.nonce;
     // Fix for checking user login status - handle different formats
     isUserLoggedIn = config.isUserLoggedIn === true || config.isUserLoggedIn === 'true' || config.isUserLoggedIn === '1' || config.isUserLoggedIn === 1;
+    /*
     console.log('Storage module initialized with:', {
         ajaxUrl,
         nonceLength: nonce ? nonce.length : 'missing',
         isUserLoggedIn,
         rawUserLoggedIn: config.isUserLoggedIn
-    });
+    });*/
 };
 
 /**
@@ -253,7 +254,7 @@ export const loadDesigns = async (updateKayakPartColor, handleHullAppearanceChan
     newLoadButton.addEventListener('click', () => {
         const designId = newSelect.value;
         if (designId) {
-            console.log('Load button clicked for design:', designId);
+            // Load design on button click
             handleLoadDesign(designId, updateKayakPartColor, handleHullAppearanceChange);
         }
     });
@@ -261,14 +262,14 @@ export const loadDesigns = async (updateKayakPartColor, handleHullAppearanceChan
     newDeleteButton.addEventListener('click', () => {
         const designId = newSelect.value;
         if (designId) {
-            console.log('Delete button clicked for design:', designId);
+            // Delete design on button click
             handleDeleteDesign(designId, updateKayakPartColor, handleHullAppearanceChange);
         }
     });
     
     // Add event listener to the dropdown to enable/disable buttons
     newSelect.addEventListener('change', (event) => {
-        console.log('Dropdown selection changed:', event.target.value);
+        // Update button states when selection changes
         const hasSelection = event.target.value !== '';
         newLoadButton.disabled = !hasSelection;
         newDeleteButton.disabled = !hasSelection;
@@ -278,11 +279,7 @@ export const loadDesigns = async (updateKayakPartColor, handleHullAppearanceChan
     if (isUserLoggedIn) {
         // Logged-in user: Load from database
         try {
-            console.log('Loading designs with AJAX - request details:', {
-                ajaxUrl,
-                nonce,
-                isUserLoggedIn
-            });
+            // Loading designs with AJAX
             
             // Use POST instead of GET for better compatibility
             const formData = new FormData();
@@ -294,18 +291,18 @@ export const loadDesigns = async (updateKayakPartColor, handleHullAppearanceChan
                 body: formData
             });
             
-            console.log('AJAX response status:', response.status, response.statusText);
+
             
             if (!response.ok) {
                 throw new Error(`Server returned ${response.status}: ${response.statusText}`);
             }
             
             const result = await response.json();
-            console.log('AJAX response for get_kayak_designs:', result); // DEBUGGING
+
 
             if (result.success) {
                 if (result.data.length === 0) {
-                    console.log('No designs found in the database for the current user.');
+                    // No designs found in the database for the current user
                 } else {
                     // Add each design as an option to the dropdown
                     result.data.forEach(design => {
@@ -327,7 +324,7 @@ export const loadDesigns = async (updateKayakPartColor, handleHullAppearanceChan
         const savedDesigns = JSON.parse(localStorage.getItem('kayakDesigns')) || [];
         
         if (savedDesigns.length === 0) {
-            console.log('No designs found in localStorage.');
+            // No designs found in localStorage
         } else {
             // Add each design as an option to the dropdown
             savedDesigns.forEach(design => {
@@ -414,13 +411,14 @@ export const handleLoadDesign = async (designId, updateKayakPartColor, handleHul
     if (isUserLoggedIn) {
         // Logged-in user: Fetch design from server
         try {
+            /*
             console.log('Loading individual design with AJAX - request details:', {
                 ajaxUrl,
                 nonce,
                 designId,
                 isUserLoggedIn
             });
-            
+            */
             // Use POST instead of GET for better compatibility
             const formData = new FormData();
             formData.append('action', 'load_kayak_design'); // Changed to match PHP handler name
@@ -432,19 +430,15 @@ export const handleLoadDesign = async (designId, updateKayakPartColor, handleHul
                 body: formData
             });
             
-            console.log('AJAX response status:', response.status, response.statusText);
+
             
             if (!response.ok) {
                 throw new Error(`Server returned ${response.status}: ${response.statusText}`);
             }
             
             const result = await response.json();
-            console.log('AJAX response for get_kayak_design:', result);
-            
-            console.log('Full result object structure:', JSON.stringify(result, null, 2));
             
             if (!result.success) {
-                console.error('Server reported error:', result.data || 'No error message provided');
                 alert(`Could not load design: ${result.data || 'The server reported an error'}`);
                 return;
             }
@@ -454,8 +448,6 @@ export const handleLoadDesign = async (designId, updateKayakPartColor, handleHul
                 alert('Could not load design: The server response was missing design data');
                 return;
             }
-            
-            console.log('Design data from server:', result.data);
             
             try {
                 // Try to parse the design data
@@ -468,12 +460,9 @@ export const handleLoadDesign = async (designId, updateKayakPartColor, handleHul
                         : result.data;
                 } catch (parseError) {
                     console.error('Error parsing design data:', parseError);
-                    console.log('Raw design_data:', result.data.design_data);
                     alert('Could not load the design. Invalid data format.');
                     return;
                 }
-                
-                console.log('Successfully parsed design data:', designData);
                 
                 if (!designData || typeof designData !== 'object') {
                     console.error('Design data is not a valid object after parsing:', designData);
@@ -489,14 +478,12 @@ export const handleLoadDesign = async (designId, updateKayakPartColor, handleHul
                 const selectedModel = result.data.model || modelSelect?.value;
                 
                 if (modelSelect && selectedModel) {
-                    console.log('Updating kayak model for saved design:', selectedModel);
                     modelSelect.value = selectedModel;
                     
                     // Import the updateKayakAssets function from designer module
                     import('./designer.js').then(designerModule => {
                         // Directly call updateKayakAssets with the model name to refresh all mask paths
                         designerModule.updateKayakAssets(selectedModel);
-                        console.log('Mask assets paths refreshed for model:', selectedModel);
                     });
                     
                     // Only dispatch the change event after updating assets
@@ -540,20 +527,20 @@ export const handleLoadDesign = async (designId, updateKayakPartColor, handleHul
 export const handleDeleteDesign = async (designId, updateKayakPartColor, handleHullAppearanceChange) => {
     if (!designId) return;
     
-    console.log('Starting delete process for design:', designId);
+    // Starting delete process for design
     
     // Confirm deletion with the user
     if (!confirm('Are you sure you want to delete this design? This action cannot be undone.')) {
-        console.log('User cancelled deletion');
+        // User cancelled deletion
         return;
     }
     
-    console.log('User confirmed deletion, proceeding...');
+    // User confirmed deletion, proceeding
     
     if (isUserLoggedIn) {
         // Logged-in user: Delete from server
         try {
-            console.log('Deleting design with AJAX:', designId);
+            // Deleting design with AJAX
             
             const formData = new FormData();
             formData.append('action', 'delete_kayak_design');
@@ -570,10 +557,10 @@ export const handleDeleteDesign = async (designId, updateKayakPartColor, handleH
             }
             
             const result = await response.json();
-            console.log('AJAX response for delete_kayak_design:', result);
+
             
             if (result.success) {
-                console.log('Design deleted successfully, refreshing list...');
+                // Design deleted successfully, refreshing list
                 // Just update the dropdown options instead of removing the entire dropdown
                 // This preserves the dropdown's existence in the DOM
                 setTimeout(() => {
@@ -592,12 +579,12 @@ export const handleDeleteDesign = async (designId, updateKayakPartColor, handleH
     } else {
         // Guest user: Delete from local storage
         try {
-            console.log('Deleting design from local storage:', designId);
+            // Deleting design from local storage
             const savedDesigns = JSON.parse(localStorage.getItem('kayakDesigns')) || [];
             const updatedDesigns = savedDesigns.filter(design => design.id !== designId);
             localStorage.setItem('kayakDesigns', JSON.stringify(updatedDesigns));
             
-            console.log('Design deleted from local storage, refreshing list...');
+            // Design deleted from local storage, refreshing list
             // Just update the dropdown options instead of removing the entire dropdown
             // This preserves the dropdown's existence in the DOM
             setTimeout(() => {
