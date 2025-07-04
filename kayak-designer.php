@@ -153,7 +153,7 @@ function kayak_designer_render_ral_palette($id, $name, $default_color) {
  * Scans the models directory to find available kayak models.
  */
 function get_kayak_models() {
-    $models_path = plugin_dir_path(__FILE__) . 'assets/images/models/';
+    $models_path = plugin_dir_path(__FILE__) . 'assets/img/models/';
     $models = [];
     if (is_dir($models_path)) {
         $items = scandir($models_path);
@@ -176,7 +176,7 @@ function kayak_designer_shortcode_handler($atts) {
     if (!in_array($default_model, $models) && !empty($models)) {
         $default_model = $models[0];
     }
-    $models_base_url = plugin_dir_url(__FILE__) . 'assets/images/models/';
+    $models_base_url = plugin_dir_url(__FILE__) . 'assets/img/models/';
 
     // Start output buffering
     ob_start();
@@ -342,7 +342,7 @@ function kayak_designer_enqueue_assets() {
             true
         );
 
-        // Enqueue Kayak Designer JS
+        // Enqueue Kayak Designer JS as a module
         wp_enqueue_script(
             'kayak-designer-js',
             plugin_dir_url(__FILE__) . 'assets/js/kayak-designer.js',
@@ -350,6 +350,14 @@ function kayak_designer_enqueue_assets() {
             filemtime(plugin_dir_path(__FILE__) . 'assets/js/kayak-designer.js'),
             true
         );
+        
+        // Add type="module" attribute to the script tag
+        add_filter('script_loader_tag', function($tag, $handle) {
+            if ('kayak-designer-js' === $handle) {
+                $tag = str_replace(' src', ' type="module" src', $tag);
+            }
+            return $tag;
+        }, 10, 2);
 
         // Pass data from PHP to our JavaScript file
         $options = get_option('kayak_designer_options');
@@ -358,13 +366,13 @@ function kayak_designer_enqueue_assets() {
             'kayakDesignerData',
             [
                 'apiKey'         => isset($options['api_key']) ? esc_attr($options['api_key']) : '',
-                'pluginBaseUrl'  => plugin_dir_url(__FILE__),
+                'pluginUrl'      => plugin_dir_url(__FILE__),
                 'ajaxUrl'        => admin_url('admin-ajax.php'),
-                'patternsPath'   => plugin_dir_url(__FILE__) . 'assets/patterns/',
+                'patternsPath'   => plugin_dir_url(__FILE__) . 'assets/img/patterns/',
                 'nonce'          => wp_create_nonce('kayak_designer_nonce'),
                 'isUserLoggedIn' => is_user_logged_in() ? 'true' : 'false',
                 'modelsList'     => get_kayak_models(),
-                'modelsBaseUrl'  => plugin_dir_url(__FILE__) . 'assets/images/models/'
+                'modelsBaseUrl'  => plugin_dir_url(__FILE__) . 'assets/img/models/'
             ]
         );
     }
@@ -477,7 +485,13 @@ function kayak_designer_load_design() {
 
     global $wpdb;
     $user_id = get_current_user_id();
-    $design_id = isset($_GET['design_id']) ? absint($_GET['design_id']) : 0;
+    // Check both GET and POST for the design_id parameter
+    $design_id = 0;
+    if (isset($_POST['design_id'])) {
+        $design_id = absint($_POST['design_id']);
+    } elseif (isset($_GET['design_id'])) {
+        $design_id = absint($_GET['design_id']);
+    }
 
     if (!$design_id) {
         wp_send_json_error('No design ID specified.');
