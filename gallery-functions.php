@@ -36,16 +36,16 @@ function kayak_designer_gallery_shortcode_handler($atts) {
         return '<p>No designs have been shared yet.</p>';
     }
 
-    // --- Sorting Form ---
-    $current_url = remove_query_arg(['orderby', 'order']);
-    $output = '<form method="get" action="' . esc_url($current_url) . '" class="kayak-gallery-sorting">
-        <select name="orderby" onchange="this.form.submit()">
+    // --- Sorting Form with AJAX ---
+    $nonce = wp_create_nonce('kayak_designer_gallery_nonce');
+    $output = '<div class="kayak-gallery-sorting">
+        <select id="gallery-sort-select" data-nonce="' . $nonce . '">
             <option value="created_at" ' . selected($orderby, 'created_at', false) . '>Sort by Newest</option>
             <option value="votes" ' . selected($orderby, 'votes', false) . '>Sort by Most Voted</option>
             <option value="display_name" ' . selected($orderby, 'display_name', false) . '>Sort by Author</option>
         </select>
-        <input type="hidden" name="order" value="DESC"> ' . // Simple for now
-    '</form>';
+        <span id="gallery-loading-indicator" style="display:none;">Loading...</span>
+    </div>';
 
     // --- Gallery Grid ---
     $output .= '<div class="kayak-design-gallery">';
@@ -245,3 +245,72 @@ function kayak_designer_smtp_config($phpmailer) {
     $phpmailer->SMTPSecure = isset($options['smtp_encryption']) ? $options['smtp_encryption'] : 'tls';
 }
 add_action('phpmailer_init', 'kayak_designer_smtp_config');
+
+/**
+ * AJAX handler for gallery filtering
+ */
+function kayak_designer_gallery_filter() {
+    // Verify nonce for security
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'kayak_designer_gallery_nonce')) {
+        wp_send_json_error('Security check failed');
+        return;
+    }
+    
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'kayak_designs';
+    
+    // --- Sorting Logic ---
+    $allowed_orderby = ['votes', 'created_at', 'display_name'];
+    $orderby = isset($_POST['orderby']) && in_array($_POST['orderby'], $allowed_orderby) ? $_POST['orderby'] : 'created_at';
+    $order = 'DESC'; // Default order
+    
+    $users_table = $wpdb->prefix . 'users';
+    $query = "SELECT d.*, u.display_name FROM {$table_name} d LEFT JOIN {$users_table} u ON d.user_id = u.ID";
+    
+    // Handle sorting order
+    if ($orderby === 'display_name') {
+        $order = 'ASC'; // Sort names alphabetically
+    }
+    
+    // Correctly and safely add order by clause
+    $query .= " ORDER BY " . esc_sql($orderby) . " " . esc_sql($order);
+    
+    $designs = $wpdb->get_results($query);
+    
+    if (empty($designs)) {
+        wp_send_json_success(['html' => '<p>No designs have been shared yet.</p>']);
+        return;
+    }
+    
+    // --- Gallery Grid ---
+    $output = '';
+    
+    foreach ($designs as $design) {
+        $user_info = get_userdata($design->user_id);
+        $author_name = $user_info ? $user_info->display_name : 'Anonymous';
+        $design_date = date_format(date_create($design->created_at), 'F j, Y');
+        
+        $output .= '<div class="gallery-item">';
+        $output .= '<h3>' . esc_html($design->design_name) . '</h3>';
+        
+        if (!empty($design->preview_image)) {
+            // Make the image clickable and add data attributes for the modal
+            $output .= '<div class="gallery-item-preview" data-high-res-image="' . esc_attr($design->preview_image) . '">';
+            $output .= '<img src="' . esc_attr($design->preview_image) . '" alt="' . esc_attr($design->design_name) . '">';
+            $output .= '<span class="zoom-icon" data-modal-image="' . esc_attr($design->preview_image) . '" data-modal-title="' . esc_attr($design->design_name) . '">&#x26F6;</span>';
+            $output .= '</div>';
+        } else {
+            $output .= '<div class="kayak-preview-placeholder">[No Preview]</div>';
+        }
+        
+        $output .= '<p>By: ' . esc_html($author_name) . '</p>';
+        $output .= '<p>Date: ' . esc_html($design_date) . '</p>';
+        $output .= '<p>Votes: <span class="vote-count">' . intval($design->votes) . '</span></p>';
+        $output .= '<button class="vote-button" data-design-id="' . esc_attr($design->id) . '" data-nonce="' . wp_create_nonce('kayak_designer_vote_nonce') . '">Vote</button>';
+        $output .= '</div>';
+    }
+    
+    wp_send_json_success(['html' => $output]);
+}
+add_action('wp_ajax_kayak_designer_gallery_filter', 'kayak_designer_gallery_filter');
+add_action('wp_ajax_nopriv_kayak_designer_gallery_filter', 'kayak_designer_gallery_filter');
