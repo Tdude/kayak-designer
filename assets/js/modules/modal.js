@@ -66,15 +66,35 @@ export const initializeModal = () => {
             // Clone the complete top view container with all layers
             const topViewClone = topViewContainer.cloneNode(true);
             topViewClone.id = 'modal-top-view-container';
-            topViewClone.style.width = '90%'; // Make it larger in the modal
+            // Better scaling approach that preserves aspect ratio
+            topViewClone.style.maxWidth = '90%'; // Use maxWidth instead of width
             topViewClone.style.margin = '0 auto 20px auto';
+            
+            // Ensure all child elements maintain their relative positions
+            const topImages = topViewClone.querySelectorAll('img');
+            topImages.forEach(img => {
+                // Preserve original positioning but ensure they scale with container
+                img.style.maxWidth = '100%';
+                img.style.height = 'auto';
+            });
+            
             imageContainer.appendChild(topViewClone);
             
             // Clone the complete side view container with all layers
             const sideViewClone = sideViewContainer.cloneNode(true);
             sideViewClone.id = 'modal-side-view-container';
-            sideViewClone.style.width = '90%'; // Make it larger in the modal
+            // Better scaling approach that preserves aspect ratio
+            sideViewClone.style.maxWidth = '90%'; // Use maxWidth instead of width
             sideViewClone.style.margin = '0 auto';
+            
+            // Ensure all child elements maintain their relative positions
+            const sideImages = sideViewClone.querySelectorAll('img');
+            sideImages.forEach(img => {
+                // Preserve original positioning but ensure they scale with container
+                img.style.maxWidth = '100%';
+                img.style.height = 'auto';
+            });
+            
             imageContainer.appendChild(sideViewClone);
             
             // Add to modal content

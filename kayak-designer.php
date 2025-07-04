@@ -3,7 +3,7 @@
  * Plugin Name:       Kayak Designer
  * Plugin URI:        https://example.com/plugins/the-basics/
  * Description:       Allows users to customize kayak designs with colors, patterns, and accessories, then download their creations as PDF or SVG files.
- * Version:           1.3
+ * Version:           1.4
  * Requires at least: 5.2
  * Requires PHP:      7.2
  * Author:            Tibor Berki
@@ -20,7 +20,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 // Define plugin version
-define('KAYAK_DESIGNER_VERSION', '1.3');
+define('KAYAK_DESIGNER_VERSION', '1.4');
 
 /**
  * Enqueue scripts and styles for the admin area.
@@ -342,18 +342,71 @@ function kayak_designer_enqueue_assets() {
             true
         );
 
-        // Enqueue Kayak Designer JS as a module
-        wp_enqueue_script(
-            'kayak-designer-js',
-            plugin_dir_url(__FILE__) . 'assets/js/kayak-designer.js',
-            ['html2canvas', 'jspdf'], // Add dependencies
-            filemtime(plugin_dir_path(__FILE__) . 'assets/js/kayak-designer.js'),
-            true
-        );
+        // Register and enqueue all module scripts separately so we can apply type="module" to them
+        $modules_path = plugin_dir_url(__FILE__) . 'assets/js/modules/';
+        $modules_dir = plugin_dir_path(__FILE__) . 'assets/js/modules/';
         
-        // Add type="module" attribute to the script tag
-        add_filter('script_loader_tag', function($tag, $handle) {
-            if ('kayak-designer-js' === $handle) {
+        // Define all our module scripts
+        $module_scripts = [
+            'kayak-designer-js' => [
+                'path' => plugin_dir_url(__FILE__) . 'assets/js/kayak-designer.js',
+                'file_path' => plugin_dir_path(__FILE__) . 'assets/js/kayak-designer.js',
+                'deps' => ['html2canvas', 'jspdf']
+            ],
+            'kayak-designer-utils' => [
+                'path' => $modules_path . 'utils.js',
+                'file_path' => $modules_dir . 'utils.js',
+                'deps' => []
+            ],
+            'kayak-designer-core' => [
+                'path' => $modules_path . 'core.js',
+                'file_path' => $modules_dir . 'core.js',
+                'deps' => ['kayak-designer-utils']
+            ],
+            'kayak-designer-designer' => [
+                'path' => $modules_path . 'designer.js',
+                'file_path' => $modules_dir . 'designer.js',
+                'deps' => ['kayak-designer-utils']
+            ],
+            'kayak-designer-gallery' => [
+                'path' => $modules_path . 'gallery.js',
+                'file_path' => $modules_dir . 'gallery.js',
+                'deps' => ['kayak-designer-utils']
+            ],
+            'kayak-designer-modal' => [
+                'path' => $modules_path . 'modal.js',
+                'file_path' => $modules_dir . 'modal.js',
+                'deps' => []
+            ],
+            'kayak-designer-render' => [
+                'path' => $modules_path . 'render.js',
+                'file_path' => $modules_dir . 'render.js',
+                'deps' => ['kayak-designer-utils']
+            ],
+            'kayak-designer-storage' => [
+                'path' => $modules_path . 'storage.js',
+                'file_path' => $modules_dir . 'storage.js',
+                'deps' => ['kayak-designer-utils']
+            ]
+        ];
+        
+        // Register each module script
+        foreach ($module_scripts as $handle => $script) {
+            wp_register_script(
+                $handle,
+                $script['path'],
+                $script['deps'],
+                filemtime($script['file_path']),
+                true
+            );
+        }
+        
+        // Only need to enqueue the main script, as dependencies will be loaded automatically
+        wp_enqueue_script('kayak-designer-js');
+        
+        // Add type="module" attribute to all our module script tags
+        add_filter('script_loader_tag', function($tag, $handle) use ($module_scripts) {
+            if (array_key_exists($handle, $module_scripts)) {
                 $tag = str_replace(' src', ' type="module" src', $tag);
             }
             return $tag;
