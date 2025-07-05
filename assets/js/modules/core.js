@@ -9,6 +9,7 @@ import { initDesigner, updateKayakPartColor, handleHullAppearanceChange, updateK
 import { initGallery, handleVoteClick, showVoteConfirmationAlert } from './gallery.js';
 import { initModal, initializeModal, initializeGalleryModal } from './modal.js';
 import { initRender, renderViewToCanvas, createCombinedCanvas, exportToPng, exportToPdf } from './render.js';
+import KayakSharing from './sharing.js';
 // Configuration object with paths and settings
 let config = {};
 
@@ -29,6 +30,7 @@ export const initialize = (wpConfig) => {
     initGallery(config);
     initModal(config);
     initRender(config);
+    KayakSharing.init();
 
     // Check which page we're on and initialize accordingly
     if (elementExists('#kayak-designer-container')) {
@@ -45,6 +47,13 @@ const initializeDesignerPage = () => {
     try {
         initializeDesigner();
         initializeModal();
+        
+        // Check if we need to load a design from URL (shared design)
+        const urlDesignData = KayakSharing.loadFromUrl();
+        if (urlDesignData.found) {
+            // Attempt to load the shared design
+            handleDesignLoad(urlDesignData.designId);
+        }
 
         const pngButton = document.getElementById('export-png-button');
         if (pngButton) {

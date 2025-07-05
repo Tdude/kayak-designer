@@ -3,6 +3,7 @@
  */
 import { setLocalStorageItem, getLocalStorageItem } from './utils.js';
 import { createCombinedCanvas } from './render.js';
+import KayakSharing from './sharing.js';
 
 // Constant for local storage key
 const LOCAL_STORAGE_KEY = 'kayak_designer_designs';
@@ -134,6 +135,10 @@ export const saveDesign = async (updateKayakPartColor, handleHullAppearanceChang
             const result = await response.json();
             alert(result.success ? 'Design saved successfully.' : `Error: ${result.data}`);
             if (result.success) {
+                // Update sharing with the saved design data
+                if (result.data && result.data.design) {
+                    KayakSharing.updateDesignData(result.data.design);
+                }
                 loadDesigns(updateKayakPartColor, handleHullAppearanceChange);
             }
         } catch (error) {

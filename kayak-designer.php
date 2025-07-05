@@ -325,6 +325,14 @@ function kayak_designer_enqueue_assets() {
             [], // No dependencies
             filemtime(plugin_dir_path(__FILE__) . 'assets/css/kayak-designer.css')
         );
+        
+        // Enqueue Sharing CSS
+        wp_enqueue_style(
+            'kayak-designer-sharing-css',
+            plugin_dir_url(__FILE__) . 'assets/css/sharing.css',
+            ['kayak-designer-css'], // Depends on main CSS
+            filemtime(plugin_dir_path(__FILE__) . 'assets/css/sharing.css')
+        );
 
         // Enqueue html2canvas for export functionality
         wp_enqueue_script(

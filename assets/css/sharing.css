@@ -1,0 +1,120 @@
+/* Kayak Designer - Sharing Styles */
+
+.kayak-sharing-container {
+    width: 100%;
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.kayak-sharing-container h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+    font-weight: 600;
+}
+
+.sharing-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.share-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background-color: #fff;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.share-button:hover {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.share-button svg {
+    fill: #555;
+    transition: fill 0.2s ease;
+}
+
+#facebook-share:hover {
+    background-color: #1877F2;
+}
+
+#facebook-share:hover svg {
+    fill: #fff;
+}
+
+#twitter-share:hover {
+    background-color: #1DA1F2;
+}
+
+#twitter-share:hover svg {
+    fill: #fff;
+}
+
+#email-share:hover {
+    background-color: #EA4335;
+}
+
+#email-share:hover svg {
+    fill: #fff;
+}
+
+#copy-share-link:hover {
+    background-color: #36B37E;
+}
+
+#copy-share-link:hover svg {
+    fill: #fff;
+}
+
+.share-link-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+#share-link-input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#share-link-input::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+.share-link-copied {
+    position: absolute;
+    right: 10px;
+    background-color: #36B37E;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    display: none;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 600px) {
+    .sharing-buttons {
+        flex-wrap: wrap;
+    }
+    
+    #share-link-input {
+        font-size: 12px;
+    }
+}
