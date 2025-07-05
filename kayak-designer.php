@@ -426,6 +426,8 @@ function kayak_designer_enqueue_assets() {
                 'patternsPath'   => plugin_dir_url(__FILE__) . 'assets/img/patterns/',
                 'nonce'          => wp_create_nonce('kayak_designer_nonce'),
                 'isUserLoggedIn' => is_user_logged_in() ? 'true' : 'false',
+                'isSuperAdmin'   => current_user_can('manage_options') ? 'true' : 'false',
+                'adminUrl'       => admin_url('admin.php?page=kayak-designer-designs'),
                 'modelsList'     => get_kayak_models(),
                 'modelsBaseUrl'  => plugin_dir_url(__FILE__) . 'assets/img/models/'
             ]
@@ -624,10 +626,12 @@ function kayak_designer_delete_design() {
 }
 add_action('wp_ajax_delete_kayak_design', 'kayak_designer_delete_design');
 
-// Include gallery functions
+// Include required files
 require_once plugin_dir_path(__FILE__) . 'gallery-functions.php';
+require_once plugin_dir_path(__FILE__) . 'admin/admin-helpers.php';
 
-// Load admin settings page
+// Load admin-only files
 if (is_admin()) {
     require_once plugin_dir_path(__FILE__) . 'admin/settings-page.php';
+    require_once plugin_dir_path(__FILE__) . 'admin/designs-manager.php';
 }

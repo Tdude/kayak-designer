@@ -5,18 +5,9 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Add options page
+ * Settings page function
+ * Note: Menu registration moved to designs-manager.php
  */
-function kayak_designer_options_page() {
-    add_options_page(
-        'Kayak Designer Settings',
-        'Kayak Designer',
-        'manage_options',
-        'kayak-designer',
-        'kayak_designer_options_page_html'
-    );
-}
-add_action('admin_menu', 'kayak_designer_options_page');
 
 /**
  * Render the settings page

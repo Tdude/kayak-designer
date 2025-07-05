@@ -11,6 +11,8 @@ const LOCAL_STORAGE_KEY = 'kayak_designer_designs';
 let ajaxUrl;
 let nonce;
 let isUserLoggedIn;
+let isSuperAdmin;
+let adminUrl;
 
 /**
  * Initialize storage module with WordPress data
@@ -19,8 +21,11 @@ let isUserLoggedIn;
 export const initStorage = (config) => {
     ajaxUrl = config.ajaxUrl;
     nonce = config.nonce;
+    adminUrl = config.adminUrl;
     // Fix for checking user login status - handle different formats
     isUserLoggedIn = config.isUserLoggedIn === true || config.isUserLoggedIn === 'true' || config.isUserLoggedIn === '1' || config.isUserLoggedIn === 1;
+    // Check if user is superadmin
+    isSuperAdmin = config.isSuperAdmin === true || config.isSuperAdmin === 'true' || config.isSuperAdmin === '1' || config.isSuperAdmin === 1;
     /*
     console.log('Storage module initialized with:', {
         ajaxUrl,
@@ -249,6 +254,33 @@ export const loadDesigns = async (updateKayakPartColor, handleHullAppearanceChan
     buttonsContainer.innerHTML = '';
     buttonsContainer.appendChild(newLoadButton);
     buttonsContainer.appendChild(newDeleteButton);
+    
+    // Add edit button for superadmins
+    if (isSuperAdmin) {
+        const editButton = document.createElement('button');
+        editButton.id = 'edit-design-button';
+        editButton.className = 'button edit-design-button';
+        editButton.textContent = 'Edit as Admin';
+        editButton.type = 'button';
+        editButton.disabled = true;
+        
+        // Add event listener to edit button
+        editButton.addEventListener('click', () => {
+            const designId = newSelect.value;
+            if (designId) {
+                // Redirect to admin edit page
+                window.location.href = `${adminUrl}&action=edit&design_id=${designId}`;
+            }
+        });
+        
+        buttonsContainer.appendChild(editButton);
+        
+        // Update the change event to enable/disable the edit button too
+        newSelect.addEventListener('change', (event) => {
+            const hasSelection = event.target.value !== '';
+            editButton.disabled = !hasSelection;
+        });
+    }
     
     // Add event listeners to buttons (only once)
     newLoadButton.addEventListener('click', () => {

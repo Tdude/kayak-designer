@@ -115,7 +115,14 @@ function kayak_designer_gallery_shortcode_handler($atts) {
         $output .= '<p>Date: ' . esc_html($design_date) . '</p>';
         $output .= '<p>Model: ' . esc_html($model_name) . '</p>'; // Add model display
         $output .= '<p>Votes: <span class="vote-count">' . intval($design->votes) . '</span></p>';
-        $output .= '<button class="vote-button" data-design-id="' . esc_attr($design->id) . '" data-nonce="' . wp_create_nonce('kayak_designer_vote_nonce') . '">Vote</button>';
+        $output .= '<button class="vote-button" data-design-id="' . esc_attr($design->id) . '"'
+            . ' data-nonce="' . wp_create_nonce('kayak_designer_vote_nonce') . '">Vote</button>';
+            
+        // Add admin edit button if the user is a superadmin
+        if (function_exists('kayak_designer_admin_edit_button')) {
+            $output .= ' ' . kayak_designer_admin_edit_button($design->id, 'small');
+        }
+        
         $output .= '</div>';
     }
 
@@ -378,7 +385,14 @@ function kayak_designer_gallery_filter() {
         $output .= '<p>Date: ' . esc_html($design_date) . '</p>';
         $output .= '<p>Model: ' . esc_html($model_name) . '</p>'; // Add model display
         $output .= '<p>Votes: <span class="vote-count">' . intval($design->votes) . '</span></p>';
-        $output .= '<button class="vote-button" data-design-id="' . esc_attr($design->id) . '" data-nonce="' . wp_create_nonce('kayak_designer_vote_nonce') . '">Vote</button>';
+        $output .= '<button class="vote-button" data-design-id="' . esc_attr($design->id) . '"'
+            . ' data-nonce="' . wp_create_nonce('kayak_designer_vote_nonce') . '">Vote</button>';
+            
+        // Add admin edit button if the user is a superadmin
+        if (function_exists('kayak_designer_admin_edit_button')) {
+            $output .= ' ' . kayak_designer_admin_edit_button($design->id, 'small');
+        }
+        
         $output .= '</div>';
     }
     
