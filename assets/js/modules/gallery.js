@@ -6,6 +6,7 @@
 let ajaxUrl;
 let nonce;
 let isUserLoggedIn;
+let galleryModal; // Reference to the gallery modal element
 
 /**
  * Initialize gallery module with WordPress data
@@ -16,8 +17,14 @@ export const initGallery = (config) => {
     nonce = config.nonce;
     isUserLoggedIn = config.isUserLoggedIn === 'true';
     
+    // Store reference to gallery modal
+    galleryModal = document.getElementById('kayak-gallery-modal');
+    
     // Initialize gallery filtering
     initGalleryFiltering();
+    
+    // Initialize gallery events for initial page load
+    attachGalleryItemEvents();
 };
 
 /**
@@ -61,6 +68,14 @@ export const handleVoteClick = (e) => {
         alert('Please log in to vote for designs.');
         return;
     }
+    
+    // Prevent multiple clicks
+    if (voteButton.disabled) {
+        return;
+    }
+    
+    // Disable button temporarily to prevent double-clicks
+    voteButton.disabled = true;
 
     // Determine the vote action based on button state
     let voteAction;
@@ -129,11 +144,20 @@ export const handleVoteClick = (e) => {
                 errorMessage = 'Could not process your vote. Please try again later.';
             }
             
-            alert(errorMessage);
+            // Show a single alert - use a timeout to prevent multiple alerts if events fire rapidly
+            setTimeout(() => {
+                alert(errorMessage);
+            }, 100);
         }
     })
     .catch(error => {
         alert('An error occurred while processing your vote.');
+    })
+    .finally(() => {
+        // Re-enable button after request completes (success or failure)
+        setTimeout(() => {
+            voteButton.disabled = false;
+        }, 500); // Short delay to prevent accidental double-clicks
     });
 };
 
@@ -177,8 +201,8 @@ const initGalleryFiltering = () => {
             return;
         }
         
-        // Show loading indicator
-        if (loadingIndicator) loadingIndicator.style.display = 'inline-block';
+        // Show the inline spinner without causing layout shifts
+        if (loadingIndicator) loadingIndicator.style.display = 'block';
         
         // Make AJAX request to filter gallery
         const formData = new FormData();
@@ -196,13 +220,11 @@ const initGalleryFiltering = () => {
                 // Update gallery content
                 galleryContainer.innerHTML = result.data.html;
                 
-                // Re-initialize click events for gallery items
+                // Re-attach event listeners to new content
                 attachGalleryItemEvents();
-            } else {
-                // Error filtering gallery
             }
             
-            // Hide loading indicator
+            // Hide spinner without layout shift
             if (loadingIndicator) loadingIndicator.style.display = 'none';
         })
         .catch(error => {
@@ -217,21 +239,27 @@ const initGalleryFiltering = () => {
  * Attach click events to gallery items after AJAX refresh
  */
 const attachGalleryItemEvents = () => {
+    // Make sure we have a reference to the modal
+    galleryModal = galleryModal || document.getElementById('kayak-gallery-modal');
+    
+    // Initialize modal close button
+    if (galleryModal) {
+        const closeBtn = galleryModal.querySelector('.kayak-modal-close');
+        if (closeBtn) {
+            // Remove any existing event listeners
+            closeBtn.removeEventListener('click', closeGalleryModal);
+            // Add fresh event listener
+            closeBtn.addEventListener('click', closeGalleryModal);
+        }
+    }
+    
     // Re-initialize modal triggers
     const zoomIcons = document.querySelectorAll('.zoom-icon');
     zoomIcons.forEach(icon => {
-        icon.addEventListener('click', (e) => {
-            const image = e.target.getAttribute('data-modal-image');
-            const title = e.target.getAttribute('data-modal-title');
-            const modalImage = document.getElementById('kayak-gallery-modal-image');
-            const modalTitle = document.getElementById('kayak-gallery-modal-title');
-            
-            if (modalImage) {
-                modalImage.src = image;
-                if (modalTitle) modalTitle.textContent = title;
-                galleryModal.style.display = 'flex';
-            }
-        });
+        // Remove existing listeners to avoid duplicates
+        icon.removeEventListener('click', handleZoomIconClick);
+        // Add fresh event listener
+        icon.addEventListener('click', handleZoomIconClick);
     });
     
     // Re-initialize vote buttons
@@ -239,4 +267,29 @@ const attachGalleryItemEvents = () => {
     voteButtons.forEach(button => {
         button.addEventListener('click', handleVoteClick);
     });
+};
+
+/**
+ * Handle zoom icon click to show modal
+ */
+const handleZoomIconClick = (e) => {
+    const image = e.target.getAttribute('data-modal-image');
+    const title = e.target.getAttribute('data-modal-title');
+    const modalImage = document.getElementById('kayak-gallery-modal-image');
+    const modalTitle = document.getElementById('kayak-gallery-modal-title');
+    
+    if (galleryModal && modalImage) {
+        modalImage.src = image;
+        if (modalTitle) modalTitle.textContent = title;
+        galleryModal.style.display = 'flex';
+    }
+};
+
+/**
+ * Close the gallery modal
+ */
+const closeGalleryModal = () => {
+    if (galleryModal) {
+        galleryModal.style.display = 'none';
+    }
 };

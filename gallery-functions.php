@@ -8,6 +8,43 @@ if ( ! defined( 'WPINC' ) ) {
 // --- Public Design Gallery Shortcode ---
 
 /**
+ * Register settings for gallery page
+ */
+function kayak_designer_register_gallery_settings() {
+    register_setting('kayak_designer_options', 'kayak_designer_gallery_page_id');
+}
+add_action('admin_init', 'kayak_designer_register_gallery_settings');
+
+/**
+ * Add setting field to admin page for gallery page selection
+ * Note: This assumes you have an admin settings page already set up
+ */
+function kayak_designer_add_gallery_settings_field($section) {
+    add_settings_field(
+        'kayak_designer_gallery_page_id',
+        'Gallery Page',
+        'kayak_designer_gallery_page_callback',
+        'kayak_designer',
+        $section
+    );
+}
+add_action('kayak_designer_settings_section', 'kayak_designer_add_gallery_settings_field');
+
+/**
+ * Callback for gallery page setting field
+ */
+function kayak_designer_gallery_page_callback() {
+    $gallery_page_id = get_option('kayak_designer_gallery_page_id');
+    wp_dropdown_pages(array(
+        'name' => 'kayak_designer_gallery_page_id',
+        'show_option_none' => '-- Select Gallery Page --',
+        'option_none_value' => '0',
+        'selected' => $gallery_page_id
+    ));
+    echo '<p class="description">Select the page where the gallery shortcode [kayak_designer_gallery] is used.</p>';
+}
+
+/**
  * Handles the [kayak_designer_gallery] shortcode.
  */
 function kayak_designer_gallery_shortcode_handler($atts) {
@@ -15,7 +52,7 @@ function kayak_designer_gallery_shortcode_handler($atts) {
     $table_name = $wpdb->prefix . 'kayak_designs';
 
     // --- Sorting Logic ---
-    $allowed_orderby = ['votes', 'created_at', 'display_name'];
+    $allowed_orderby = ['votes', 'created_at', 'display_name', 'model_name'];
     $orderby = isset($_GET['orderby']) && in_array($_GET['orderby'], $allowed_orderby) ? $_GET['orderby'] : 'created_at';
     $order = 'DESC'; // Default order
 
@@ -23,8 +60,8 @@ function kayak_designer_gallery_shortcode_handler($atts) {
     $query = "SELECT d.*, u.display_name FROM {$table_name} d LEFT JOIN {$users_table} u ON d.user_id = u.ID";
 
     // Handle sorting order
-    if ($orderby === 'display_name') {
-        $order = 'ASC'; // Sort names alphabetically
+    if ($orderby === 'display_name' || $orderby === 'model_name') {
+        $order = 'ASC'; // Sort names and models alphabetically
     }
     
     // Correctly and safely add order by clause
@@ -39,21 +76,27 @@ function kayak_designer_gallery_shortcode_handler($atts) {
     // --- Sorting Form with AJAX ---
     $nonce = wp_create_nonce('kayak_designer_gallery_nonce');
     $output = '<div class="kayak-gallery-sorting">
-        <select id="gallery-sort-select" data-nonce="' . $nonce . '">
-            <option value="created_at" ' . selected($orderby, 'created_at', false) . '>Sort by Newest</option>
-            <option value="votes" ' . selected($orderby, 'votes', false) . '>Sort by Most Voted</option>
-            <option value="display_name" ' . selected($orderby, 'display_name', false) . '>Sort by Author</option>
-        </select>
-        <span id="gallery-loading-indicator" style="display:none;">Loading...</span>
+        <div class="sort-control-wrapper">
+            <select id="gallery-sort-select" data-nonce="' . $nonce . '">
+                <option value="created_at" ' . selected($orderby, 'created_at', false) . '>Sort by Newest</option>
+                <option value="votes" ' . selected($orderby, 'votes', false) . '>Sort by Most Voted</option>
+                <option value="display_name" ' . selected($orderby, 'display_name', false) . '>Sort by Author</option>
+                <option value="model_name" ' . selected($orderby, 'model_name', false) . '>Sort by Model</option>
+            </select>
+            <div id="gallery-loading-indicator" class="inline-spinner" style="display:none;"></div>
+        </div>
     </div>';
 
     // --- Gallery Grid ---
     $output .= '<div class="kayak-design-gallery">';
 
     foreach ($designs as $design) {
-        $user_info = get_userdata($design->user_id);
-        $author_name = $user_info ? $user_info->display_name : 'Anonymous';
+        // Use display_name directly from the SQL query instead of calling get_userdata
+        $author_name = !empty($design->display_name) ? $design->display_name : 'Anonymous';
         $design_date = date_format(date_create($design->created_at), 'F j, Y');
+        
+        // Get model name (default if empty)
+        $model_name = !empty($design->model_name) ? $design->model_name : 'Default';
 
         $output .= '<div class="gallery-item">';
         $output .= '<h3>' . esc_html($design->design_name) . '</h3>';
@@ -70,6 +113,7 @@ function kayak_designer_gallery_shortcode_handler($atts) {
         
         $output .= '<p>By: ' . esc_html($author_name) . '</p>';
         $output .= '<p>Date: ' . esc_html($design_date) . '</p>';
+        $output .= '<p>Model: ' . esc_html($model_name) . '</p>'; // Add model display
         $output .= '<p>Votes: <span class="vote-count">' . intval($design->votes) . '</span></p>';
         $output .= '<button class="vote-button" data-design-id="' . esc_attr($design->id) . '" data-nonce="' . wp_create_nonce('kayak_designer_vote_nonce') . '">Vote</button>';
         $output .= '</div>';
@@ -112,15 +156,34 @@ function kayak_designer_confirm_vote() {
         // Increment the master vote count
         $wpdb->query($wpdb->prepare("UPDATE $designs_table SET votes = votes + 1 WHERE id = %d", $vote->design_id));
         
-        // Find the gallery page to redirect back to
-        $gallery_page_url = home_url('/'); // Default to home page
-        $pages = get_pages();
-        foreach ($pages as $page) {
-            if (has_shortcode($page->post_content, 'kayak_designer_gallery')) {
-                $gallery_page_url = get_permalink($page->ID);
-                break;
+        // Get the gallery page ID from options instead of searching all pages
+        $gallery_page_id = get_option('kayak_designer_gallery_page_id');
+        
+        // If no gallery page is set in options, redirect to home
+        if (empty($gallery_page_id)) {
+            // This is the inefficient page lookup we're replacing with settings
+            // Only do it as fallback if no gallery page ID is saved in options
+            $pages = get_pages();
+            $gallery_page = null;
+            foreach ($pages as $page) {
+                if (has_shortcode($page->post_content, 'kayak_designer_gallery')) {
+                    $gallery_page = $page;
+                    break;
+                }
             }
+            
+            if ($gallery_page) {
+                $gallery_page_url = get_permalink($gallery_page->ID);
+                wp_redirect(add_query_arg('vote_confirmed', '1', $gallery_page_url));
+                exit();
+            }
+            
+            wp_redirect(add_query_arg('vote_confirmed', '1', home_url('/')));
+            exit();
         }
+        
+        // Redirect to the gallery page
+        $gallery_page_url = get_permalink($gallery_page_id);
         wp_redirect(add_query_arg('vote_confirmed', '1', $gallery_page_url));
         exit();
     } else {
@@ -172,8 +235,13 @@ function kayak_designer_request_guest_vote() {
     
     wp_mail($email, $subject, $message, $headers);
 
-    // For local testing, we also provide the link directly in the success message.
-    $success_message = 'Thank you! Please check your email to confirm your vote. <br><br>For testing on localhost, you can use this link: <a href="' . esc_url($confirmation_link) . '" target="_blank">Confirm Vote</a>';
+    // For local testing, only show the direct link if WP_DEBUG is enabled
+    $success_message = 'Thank you! Please check your email to confirm your vote.';
+    
+    // Only show the direct link in debug mode
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        $success_message .= ' <br><br>For testing on localhost, you can use this link: <a href="' . esc_url($confirmation_link) . '" target="_blank">Confirm Vote</a>';
+    }
 
     wp_send_json_success($success_message);
 }
@@ -260,7 +328,7 @@ function kayak_designer_gallery_filter() {
     $table_name = $wpdb->prefix . 'kayak_designs';
     
     // --- Sorting Logic ---
-    $allowed_orderby = ['votes', 'created_at', 'display_name'];
+    $allowed_orderby = ['votes', 'created_at', 'display_name', 'model_name'];
     $orderby = isset($_POST['orderby']) && in_array($_POST['orderby'], $allowed_orderby) ? $_POST['orderby'] : 'created_at';
     $order = 'DESC'; // Default order
     
@@ -268,8 +336,8 @@ function kayak_designer_gallery_filter() {
     $query = "SELECT d.*, u.display_name FROM {$table_name} d LEFT JOIN {$users_table} u ON d.user_id = u.ID";
     
     // Handle sorting order
-    if ($orderby === 'display_name') {
-        $order = 'ASC'; // Sort names alphabetically
+    if ($orderby === 'display_name' || $orderby === 'model_name') {
+        $order = 'ASC'; // Sort names and models alphabetically
     }
     
     // Correctly and safely add order by clause
@@ -286,9 +354,12 @@ function kayak_designer_gallery_filter() {
     $output = '';
     
     foreach ($designs as $design) {
-        $user_info = get_userdata($design->user_id);
-        $author_name = $user_info ? $user_info->display_name : 'Anonymous';
+        // Use display_name directly from the SQL query instead of calling get_userdata
+        $author_name = !empty($design->display_name) ? $design->display_name : 'Anonymous';
         $design_date = date_format(date_create($design->created_at), 'F j, Y');
+        
+        // Get model name (default if empty)
+        $model_name = !empty($design->model_name) ? $design->model_name : 'Default';
         
         $output .= '<div class="gallery-item">';
         $output .= '<h3>' . esc_html($design->design_name) . '</h3>';
@@ -305,6 +376,7 @@ function kayak_designer_gallery_filter() {
         
         $output .= '<p>By: ' . esc_html($author_name) . '</p>';
         $output .= '<p>Date: ' . esc_html($design_date) . '</p>';
+        $output .= '<p>Model: ' . esc_html($model_name) . '</p>'; // Add model display
         $output .= '<p>Votes: <span class="vote-count">' . intval($design->votes) . '</span></p>';
         $output .= '<button class="vote-button" data-design-id="' . esc_attr($design->id) . '" data-nonce="' . wp_create_nonce('kayak_designer_vote_nonce') . '">Vote</button>';
         $output .= '</div>';

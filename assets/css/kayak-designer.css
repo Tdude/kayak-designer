@@ -450,7 +450,7 @@
     width: 100vw;
     height: 100vh;
     z-index: 1000;
-    background-color: rgba(0, 0, 0, 0.85);
+    background-color: rgba(0, 0, 0, 0.9);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -460,7 +460,7 @@
 
 /* Dark mode is default */
 .kayak-modal.light-mode {
-    background-color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
 /* Light/dark mode toggle */
@@ -613,4 +613,31 @@
 
 .zoom-icon:hover {
     background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Gallery sorting and spinner */
+.kayak-gallery-sorting {
+    margin-bottom: 20px;
+}
+
+.sort-control-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.inline-spinner {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #0073aa;
+    border-radius: 50%;
+    right: -25px;
+    top: 50%;
+    transform: translateY(-50%);
+    animation: kayak-spin 1s infinite linear;
+}
+
+@keyframes kayak-spin {
+    to { transform: translateY(-50%) rotate(360deg); }
 }
