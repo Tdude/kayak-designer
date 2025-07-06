@@ -54,6 +54,14 @@
     fill: #fff;
 }
 
+#instagram-share:hover {
+    background-color: #E1306C;
+}
+
+#instagram-share:hover svg {
+    fill: #fff;
+}
+
 #twitter-share:hover {
     background-color: #1DA1F2;
 }

@@ -133,13 +133,20 @@ export const saveDesign = async (updateKayakPartColor, handleHullAppearanceChang
                 body: formData
             });
             const result = await response.json();
-            alert(result.success ? 'Design saved successfully.' : `Error: ${result.data}`);
+            
             if (result.success) {
+                // Display success message
+                const message = result.data && result.data.message ? result.data.message : 'Design saved successfully.';
+                alert(message);
+                
                 // Update sharing with the saved design data
                 if (result.data && result.data.design) {
                     KayakSharing.updateDesignData(result.data.design);
                 }
+                
                 loadDesigns(updateKayakPartColor, handleHullAppearanceChange);
+            } else {
+                alert(`Error: ${result.data}`);
             }
         } catch (error) {
             console.error('Error saving design:', error);
@@ -510,6 +517,15 @@ export const handleLoadDesign = async (designId, updateKayakPartColor, handleHul
                 // Apply the design data to the kayak
                 applyDesign(designData, updateKayakPartColor, handleHullAppearanceChange);
                 
+                // Update sharing module with the design data
+                // Include the design id to enable sharing
+                const designToShare = {
+                    id: designId,
+                    design_name: result.data.name || '',
+                    ...designData
+                };
+                KayakSharing.updateDesignData(designToShare);
+                
                 // Always update the kayak model to ensure mask paths are correctly updated
                 const modelSelect = document.getElementById('kayak-model-select');
                 const selectedModel = result.data.model || modelSelect?.value;
@@ -544,6 +560,15 @@ export const handleLoadDesign = async (designId, updateKayakPartColor, handleHul
             const designData = designs[designId];
             if (designData) {
                 applyDesign(designData, updateKayakPartColor, handleHullAppearanceChange);
+                
+                // Update sharing module with the design data for guest users
+                // Include the design id to enable sharing
+                const designToShare = {
+                    id: designId, // Use the design name as ID for local storage designs
+                    design_name: designId,
+                    ...designData
+                };
+                KayakSharing.updateDesignData(designToShare);
             } else {
                 alert('Could not find the selected design.');
             }

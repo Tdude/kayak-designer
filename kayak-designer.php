@@ -498,7 +498,23 @@ function kayak_designer_save_design() {
     );
 
     if ($result) {
-        wp_send_json_success('Design saved successfully.');
+        // Get the newly inserted design ID
+        $design_id = $wpdb->insert_id;
+        
+        // Create a design object to return to the client
+        $design = array(
+            'id' => $design_id,
+            'design_name' => $design_name,
+            'design_data' => $design_data,
+            'model_name' => $model_name,
+            'created_at' => current_time('mysql'),
+            'user_id' => $user_id
+        );
+        
+        wp_send_json_success(array(
+            'message' => 'Design saved successfully.',
+            'design' => $design
+        ));
     } else {
         wp_send_json_error('Could not save design to the database. DB Error: ' . $wpdb->last_error);
     }
